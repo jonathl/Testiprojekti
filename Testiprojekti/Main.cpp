@@ -167,9 +167,9 @@ int main()
 	GLFWwindow* window = InitWindow();
 	glClearColor(0.1f, 0.5f, 0.7f, 1.0f);
 
-	const int wi = 256, he = 256;
+	const int wi = 512, he = 512;
 
-	float pic[wi*he*3];
+	float* pic = new float[wi*he * 3];
 
 	m_genTexture(wi, he, pic);
 
