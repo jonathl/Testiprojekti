@@ -115,9 +115,10 @@ GLFWwindow* InitWindow()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
 	GLFWwindow* window = NULL;
-	window = glfwCreateWindow(1024, 768, "Testiprojekti", NULL, NULL);
+	window = glfwCreateWindow(512, 512, "Testiprojekti", NULL, NULL);
 	if (window == NULL) {
 		fprintf(stderr, "Failed to open GLFW window.\n");
 		glfwTerminate();
@@ -137,13 +138,40 @@ GLFWwindow* InitWindow()
 	return window;
 }
 
+void m_genTexture(int width, int height, float *texture) {
+	int state = 1;
+	int others = 1;
+	int index = 0;
+	for (int i = 0; i < height; ++i) {
+		for (int j = 0; j < width; ++j) {
+			if (state == others) {
+				texture[index] = 1.0f;
+				texture[index+1] = 1.0f;
+				texture[index+2] = 1.0f;
+				index += 3;
+			}
+			else {
+				texture[index] = 0.0f;
+				texture[index + 1] = 0.0f;
+				texture[index + 2] = 0.0f;
+				index += 3;
+			}
+			state *= -1;
+		}
+		others *= -1;
+	}
+}
 
 int main() 
 {
 	GLFWwindow* window = InitWindow();
 	glClearColor(0.1f, 0.5f, 0.7f, 1.0f);
 
-	int wi = 4, he = 4;
+	const int wi = 256, he = 256;
+
+	float pic[wi*he*3];
+
+	m_genTexture(wi, he, pic);
 
 	float pixels[] = {
 		1.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,  1.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
@@ -190,12 +218,12 @@ int main()
 	GLuint tex;
 	glGenTextures(1, &tex);
 	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wi, he, 0, GL_RGB, GL_FLOAT, pixels);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wi, he, 0, GL_RGB, GL_FLOAT, pic);
 
 	/*GLuint vbo = 0;
 	glGenBuffers(1, &vbo);
