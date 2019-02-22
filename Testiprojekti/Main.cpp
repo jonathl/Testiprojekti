@@ -8,12 +8,44 @@
 #include <iostream>
 #include <string.h>
 #include <sstream>
+#include <time.h>
 #include <GL\glew.h>
 #include <GLFW\glfw3.h>
 #include <glm\glm.hpp>
 #include <glm\gtc\matrix_transform.hpp>
 
 using namespace glm;
+
+double cursor_xpos, cursor_ypos;
+bool cursorLeftPressed = false;
+
+int m_getTextureCoordinate(int width, int height) {
+	int textcoord = width * (height-cursor_ypos) + cursor_xpos;
+	//std::cout << "texcoord = " << textcoord << "\n";
+	return textcoord;
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+		std::cout << "moi";
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		cursorLeftPressed = true;
+	}
+	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+		cursorLeftPressed = false;
+	}
+}
+
+void m_drawToTexture(GLuint tex,float *texture, int width, int height) { //korjaa reunan yli piirtäminen ja textuurin ko-on vaikuttaminen
+	float color[] = { 1.0f, 0.0f, 0.0f };
+	int index = m_getTextureCoordinate(width, height) * 3;
+	texture[index] = color[0];
+	texture[++index] = color[1];
+	texture[++index] = color[2];
+	glBindTexture(GL_TEXTURE_2D, tex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, texture);
+}
 
 GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path) {
 
@@ -138,7 +170,18 @@ GLFWwindow* InitWindow()
 	return window;
 }
 
-void m_genTexture(int width, int height, float *texture) {
+void m_genWhiteTex(int width, int height, float *texture) {
+	int index = -1;
+	for (int i = 0; i < height; ++i) {
+		for (int j = 0; j < width; ++j) {
+			texture[++index] = 1.0f;
+			texture[++index] = 1.0f;
+			texture[++index] = 1.0f;
+		}
+	}
+}
+
+void m_genCheckerboardTex(int width, int height, float *texture) {
 	int state = 1;
 	int others = 1;
 	int index = 0;
@@ -162,8 +205,35 @@ void m_genTexture(int width, int height, float *texture) {
 	}
 }
 
+void m_genRandomNoise(int width, int height, float *texture) {
+	int index = -1;
+	float r_value;
+	for (int i = 0; i < height; ++i) {
+		for (int j = 0; j < width; ++j) {
+			r_value = float(rand() % 100)/100;
+			texture[++index] = r_value;
+			texture[++index] = r_value;
+			texture[++index] = r_value;
+		}
+	}
+}
+
+void m_genPerlinNoise(int width, int height, float *texture) { //täysin kesken
+	int index = -1;
+	float r_value;
+	for (int i = 0; i < height; ++i) {
+		for (int j = 0; j < width; ++j) {
+			r_value = float(rand() % 100) / 100;
+			texture[++index] = r_value;
+			texture[++index] = r_value;
+			texture[++index] = r_value;
+		}
+	}
+}
+
 int main() 
 {
+	srand(time(NULL));
 	GLFWwindow* window = InitWindow();
 	glClearColor(0.1f, 0.5f, 0.7f, 1.0f);
 
@@ -171,14 +241,7 @@ int main()
 
 	float* pic = new float[wi*he * 3];
 
-	m_genTexture(wi, he, pic);
-
-	float pixels[] = {
-		1.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,  1.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,   0.0f, 1.0f, 0.0f,  1.0f, 1.0f, 1.0f,   0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 1.0f,   1.0f, 1.0f, 1.0f,  0.0f, 0.0f, 1.0f,   1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f,  1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f
-	};
+	m_genWhiteTex(wi, he, pic);
 
 	float vertices[] = {
 		//  Position      Color             Texcoords
@@ -224,28 +287,10 @@ int main()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wi, he, 0, GL_RGB, GL_FLOAT, pic);
-
-	/*GLuint vbo = 0;
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	GLuint vao = 0;
-	
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-	glVertexAttribPointer(
-		0,
-		3,
-		GL_FLOAT,
-		GL_FALSE,
-		0,
-		(void*)0
-	);
-
-	glEnableVertexAttribArray(0);*/
 	
 	GLuint programID = LoadShaders("VertexShader.vertexshader", "FragmentShader.fragmentshader");
+
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
 
 	do {
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -260,9 +305,11 @@ int main()
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+		if (cursorLeftPressed) {
+			glfwGetCursorPos(window, &cursor_xpos, &cursor_ypos);
+			m_drawToTexture(tex, pic, wi, he);
+		}
 	} while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0);
-	//Sleep(5000);
-	//glfwFocusWindow(window);
-	//Sleep(5000);
+
 	glfwTerminate();
 }
