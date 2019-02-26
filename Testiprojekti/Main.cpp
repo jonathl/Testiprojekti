@@ -8,7 +8,10 @@
 #include <iostream>
 #include <string.h>
 #include <sstream>
+#include <math.h>
+#include <vector>
 #include <time.h>
+#include <ctime>
 #include <GL\glew.h>
 #include <GLFW\glfw3.h>
 #include <glm\glm.hpp>
@@ -19,22 +22,23 @@ using namespace glm;
 double cursor_xpos, cursor_ypos;
 bool cursorLeftPressed = false;
 
+struct UVector
+{
+	float x;
+	float y;
+	int posx;
+	int posy;
+};
+
+struct vectorGrid 
+{
+	UVector *v0, *v1, *v2, *v3;
+};
+
 int m_getTextureCoordinate(int width, int height) {
 	int textcoord = width * (height-cursor_ypos) + cursor_xpos;
 	//std::cout << "texcoord = " << textcoord << "\n";
 	return textcoord;
-}
-
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
-{
-	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
-		std::cout << "moi";
-	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-		cursorLeftPressed = true;
-	}
-	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
-		cursorLeftPressed = false;
-	}
 }
 
 void m_drawToTexture(GLuint tex,float *texture, int width, int height) { //korjaa reunan yli piirtäminen ja textuurin ko-on vaikuttaminen
@@ -170,6 +174,22 @@ GLFWwindow* InitWindow()
 	return window;
 }
 
+UVector m_genRandomUnitVector() {
+	int angle = rand() % 359;
+	UVector u;
+	u.x = cos(float(angle));
+	u.y = sin(float(angle));
+	return u;
+}
+
+//void m_genVectors(UVector v) {
+//	for (int i = 0; i < 5; ++i) {
+//		for (int j = 0; j < 5; ++j) {
+//			v[i][j] = m_genRandomUnitVector();
+//		}
+//	}
+//}
+
 void m_genWhiteTex(int width, int height, float *texture) {
 	int index = -1;
 	for (int i = 0; i < height; ++i) {
@@ -218,12 +238,49 @@ void m_genRandomNoise(int width, int height, float *texture) {
 	}
 }
 
-void m_genPerlinNoise(int width, int height, float *texture) { //täysin kesken
-	int index = -1;
-	float r_value;
+void m_genPerlinNoise(const int width,const int height, float *texture) { //kokeile yhdellä ruudulla
+	int gridsize = 120;
+	std::vector<std::vector<float>> perl;
+	UVector unitv[6][6];
+	for (int i = 0; i < 6; ++i) {  //generate unit vectors
+		for (int j = 0; j < 6; ++j) {
+			unitv[i][j] = m_genRandomUnitVector();
+			unitv[i][j].posx = gridsize*i;
+			unitv[i][j].posy = gridsize*j;
+		}
+	}
+	vectorGrid vg[25]; //generate vector grid
+	int index = 0;
+	for (int i = 0; i < 5; ++i) {  
+		for (int j = 0; j < 5; ++j) {
+			vg[index].v0 = &unitv[j][i];
+			vg[index].v1 = &unitv[j+1][i];
+			vg[index].v2 = &unitv[j][i+1];
+			vg[index].v3 = &unitv[j+1][i+1];
+			++index;
+		}
+	}
+
+	index = -1;
+	int gi = -1; //gridindex
+	float r_value = 1.0f;
+	vectorGrid vgi;
 	for (int i = 0; i < height; ++i) {
+		if (i % 120 == 0) {
+			gi += 5;
+		}
+		gi -= 4;
 		for (int j = 0; j < width; ++j) {
-			r_value = float(rand() % 100) / 100;
+			if (j != 0 && j % 120 == 0) {
+				++gi;
+			} 
+			float d0 = vg[gi].v0->x * float(j - vg[gi].v0->posx) / 120.0f + vg[gi].v0->y * float(i - vg[gi].v0->posy) / 120.0f; 
+			float d1 = vg[gi].v1->x * float(vg[gi].v1->posx + j) / 120.0f + vg[gi].v1->y * float(i - vg[gi].v1->posy) / 120.0f;
+			float d2 = vg[gi].v2->x * float(j - vg[gi].v2->posx) / 120.0f + vg[gi].v2->y * float(vg[gi].v2->posy - i) / 120.0f;
+			float d3 = vg[gi].v3->x * float(vg[gi].v3->posx + j) / 120.0f + vg[gi].v3->y * float(vg[gi].v3->posy - i) / 120.0f;
+			float di0 = d0 + 0.5f * (d1 - d0);
+			float di1 = d2 + 0.5f * (d3 - d2);
+			r_value = di0 + 0.5f * (di1 - di0);
 			texture[++index] = r_value;
 			texture[++index] = r_value;
 			texture[++index] = r_value;
@@ -231,9 +288,22 @@ void m_genPerlinNoise(int width, int height, float *texture) { //täysin kesken
 	}
 }
 
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+		std::cout << "moi";
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		cursorLeftPressed = true;
+	}
+	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+		cursorLeftPressed = false;
+	}
+}
+
 int main() 
 {
 	srand(time(NULL));
+	//m_genRandomUnitVector();
 	GLFWwindow* window = InitWindow();
 	glClearColor(0.1f, 0.5f, 0.7f, 1.0f);
 
@@ -241,7 +311,7 @@ int main()
 
 	float* pic = new float[wi*he * 3];
 
-	m_genWhiteTex(wi, he, pic);
+	m_genPerlinNoise(wi, he, pic);
 
 	float vertices[] = {
 		//  Position      Color             Texcoords
