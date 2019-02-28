@@ -239,20 +239,23 @@ void m_genRandomNoise(int width, int height, float *texture) {
 }
 
 void m_genPerlinNoise(const int width,const int height, float *texture) { //kokeile yhdellä ruudulla
-	int gridsize = 120;
+	const int gridsize = 15;
+	const int grids = 2;
 	std::vector<std::vector<float>> perl;
-	UVector unitv[6][6];
-	for (int i = 0; i < 6; ++i) {  //generate unit vectors
-		for (int j = 0; j < 6; ++j) {
+	UVector unitv[grids+1][grids+1];
+	for (int i = 0; i < grids +1; ++i) {  //generate unit vectors
+		for (int j = 0; j < grids +1; ++j) {
 			unitv[i][j] = m_genRandomUnitVector();
 			unitv[i][j].posx = gridsize*i;
 			unitv[i][j].posy = gridsize*j;
 		}
 	}
-	vectorGrid vg[25]; //generate vector grid
+	unitv[1][1].x = 1.0f; //poista
+	unitv[1][1].y = 0.0f;
+	vectorGrid vg[grids*grids]; //generate vector grid
 	int index = 0;
-	for (int i = 0; i < 5; ++i) {  
-		for (int j = 0; j < 5; ++j) {
+	for (int i = 0; i < grids; ++i) {  
+		for (int j = 0; j < grids; ++j) {
 			vg[index].v0 = &unitv[j][i];
 			vg[index].v1 = &unitv[j+1][i];
 			vg[index].v2 = &unitv[j][i+1];
@@ -260,27 +263,65 @@ void m_genPerlinNoise(const int width,const int height, float *texture) { //koke
 			++index;
 		}
 	}
-
 	index = -1;
 	int gi = -1; //gridindex
 	float r_value = 1.0f;
 	vectorGrid vgi;
 	for (int i = 0; i < height; ++i) {
-		if (i % 120 == 0) {
-			gi += 5;
+		if (i % gridsize == 0) {
+			gi += grids;
 		}
-		gi -= 4;
+		gi -= grids -1;
 		for (int j = 0; j < width; ++j) {
-			if (j != 0 && j % 120 == 0) {
+			if (j != 0 && j % gridsize == 0) {
 				++gi;
 			} 
-			float d0 = vg[gi].v0->x * float(j - vg[gi].v0->posx) / 120.0f + vg[gi].v0->y * float(i - vg[gi].v0->posy) / 120.0f; 
-			float d1 = vg[gi].v1->x * float(vg[gi].v1->posx + j) / 120.0f + vg[gi].v1->y * float(i - vg[gi].v1->posy) / 120.0f;
-			float d2 = vg[gi].v2->x * float(j - vg[gi].v2->posx) / 120.0f + vg[gi].v2->y * float(vg[gi].v2->posy - i) / 120.0f;
-			float d3 = vg[gi].v3->x * float(vg[gi].v3->posx + j) / 120.0f + vg[gi].v3->y * float(vg[gi].v3->posy - i) / 120.0f;
+			if (gi == 3) {
+				gi = 3;
+			}
+			float d0x = float(j - vg[gi].v0->posx);
+			float d0y = float(i - vg[gi].v0->posy);
+			float d0l =sqrt(d0x*d0x+ d0y*d0y);
+			d0x /= d0l;
+			d0y /= d0l;
+			float d1x = float(j - vg[gi].v1->posx);
+			float d1y = float(i - vg[gi].v1->posy);
+			float d1l = sqrt(d1x*d1x + d1y*d1y);
+			d1x /= d1l;
+			d1y /= d1l;
+			float d2x = float(j - vg[gi].v2->posx);
+			float d2y = float(i - vg[gi].v2->posy);
+			float d2l = sqrt(d2x*d2x + d2y*d2y);
+			d2x /= d2l;
+			d2y /= d2l;
+			float d3x = float(j - vg[gi].v3->posx);
+			float d3y = float(i - vg[gi].v3->posy);
+			float d3l = sqrt(d3x*d3x + d3y*d3y);
+			d3x /= d3l;
+			d3y /= d3l;
+			float d0 = vg[gi].v0->x * d0x + vg[gi].v0->y * d0y;
+			float d1 = vg[gi].v1->x * d1x + vg[gi].v1->y * d1y;
+			float d2 = vg[gi].v2->x * d2x + vg[gi].v2->y * d2y;
+			float d3 = vg[gi].v3->x * d3x + vg[gi].v3->y * d3y;
+
+
 			float di0 = d0 + 0.5f * (d1 - d0);
 			float di1 = d2 + 0.5f * (d3 - d2);
 			r_value = di0 + 0.5f * (di1 - di0);
+			
+			
+			if (gi == 0) {
+				r_value = (d3 + 1) / 2;
+			}
+			else if (gi == 1) {
+				r_value = (d2 + 1) / 2;
+			}
+			else if (gi == 2) {
+				r_value = (d1 + 1) / 2;
+			}
+			else {
+				r_value = (d0 + 1) / 2;
+			}
 			texture[++index] = r_value;
 			texture[++index] = r_value;
 			texture[++index] = r_value;
@@ -300,14 +341,14 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 	}
 }
 
-int main() 
+int main()
 {
 	srand(time(NULL));
 	//m_genRandomUnitVector();
 	GLFWwindow* window = InitWindow();
 	glClearColor(0.1f, 0.5f, 0.7f, 1.0f);
 
-	const int wi = 512, he = 512;
+	const int wi = 30, he = 30;
 
 	float* pic = new float[wi*he * 3];
 
@@ -355,18 +396,18 @@ int main()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	
+
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wi, he, 0, GL_RGB, GL_FLOAT, pic);
-	
+
 	GLuint programID = LoadShaders("VertexShader.vertexshader", "FragmentShader.fragmentshader");
 
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
 
 	do {
-		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glUseProgram(programID);
-		
+
 		glBindTexture(GL_TEXTURE_2D, tex);
 
 		glBindVertexArray(VAO);
