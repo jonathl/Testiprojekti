@@ -32,7 +32,7 @@ struct UVector
 
 struct vectorGrid 
 {
-	UVector *v0, *v1, *v2, *v3;
+	UVector* v[4];
 };
 
 int m_getTextureCoordinate(int width, int height) {
@@ -239,8 +239,8 @@ void m_genRandomNoise(int width, int height, float *texture) {
 }
 
 void m_genPerlinNoise(const int width,const int height, float *texture) { //kokeile yhdellä ruudulla
-	const int gridsize = 15;
-	const int grids = 2;
+	const int gridsize = 125;
+	const int grids = 4;
 	std::vector<std::vector<float>> perl;
 	UVector unitv[grids+1][grids+1];
 	for (int i = 0; i < grids +1; ++i) {  //generate unit vectors
@@ -256,10 +256,10 @@ void m_genPerlinNoise(const int width,const int height, float *texture) { //koke
 	int index = 0;
 	for (int i = 0; i < grids; ++i) {  
 		for (int j = 0; j < grids; ++j) {
-			vg[index].v0 = &unitv[j][i];
-			vg[index].v1 = &unitv[j+1][i];
-			vg[index].v2 = &unitv[j][i+1];
-			vg[index].v3 = &unitv[j+1][i+1];
+			vg[index].v[0] = &unitv[j][i];
+			vg[index].v[1] = &unitv[j+1][i];
+			vg[index].v[2] = &unitv[j][i+1];
+			vg[index].v[3] = &unitv[j+1][i+1];
 			++index;
 		}
 	}
@@ -279,49 +279,67 @@ void m_genPerlinNoise(const int width,const int height, float *texture) { //koke
 			if (gi == 3) {
 				gi = 3;
 			}
-			float d0x = float(j - vg[gi].v0->posx);
-			float d0y = float(i - vg[gi].v0->posy);
-			float d0l =sqrt(d0x*d0x+ d0y*d0y);
-			d0x /= d0l;
-			d0y /= d0l;
-			float d1x = float(j - vg[gi].v1->posx);
-			float d1y = float(i - vg[gi].v1->posy);
-			float d1l = sqrt(d1x*d1x + d1y*d1y);
-			d1x /= d1l;
-			d1y /= d1l;
-			float d2x = float(j - vg[gi].v2->posx);
-			float d2y = float(i - vg[gi].v2->posy);
-			float d2l = sqrt(d2x*d2x + d2y*d2y);
-			d2x /= d2l;
-			d2y /= d2l;
-			float d3x = float(j - vg[gi].v3->posx);
-			float d3y = float(i - vg[gi].v3->posy);
-			float d3l = sqrt(d3x*d3x + d3y*d3y);
-			d3x /= d3l;
-			d3y /= d3l;
-			float d0 = vg[gi].v0->x * d0x + vg[gi].v0->y * d0y;
-			float d1 = vg[gi].v1->x * d1x + vg[gi].v1->y * d1y;
-			float d2 = vg[gi].v2->x * d2x + vg[gi].v2->y * d2y;
-			float d3 = vg[gi].v3->x * d3x + vg[gi].v3->y * d3y;
+			float dx[4];
+			float dy[4];
+			float dl[4];
+			for (int k = 0; k < 4; ++k) {
+				dx[k] = float(j - vg[gi].v[k]->posx);
+				dy[k] = float(i - vg[gi].v[k]->posy);
+				dl[k] = sqrt(abs(dx[k]*dx[k] + dy[k]*dy[k]));
+				if (dl[k] > 0) {
+					dx[k] /= dl[k];
+					dy[k] /= dl[k];
+				}
+				else {
+					dx[k] = vg[gi].v[k]->x;
+					dx[k] = vg[gi].v[k]->y;
+				}
+			}
+			float d0 = vg[gi].v[0]->x * dx[0] + vg[gi].v[0]->y * dy[0];
+			float d1 = vg[gi].v[1]->x * dx[1] + vg[gi].v[1]->y * dy[1];
+			float d2 = vg[gi].v[2]->x * dx[2] + vg[gi].v[2]->y * dy[2];
+			float d3 = vg[gi].v[3]->x * dx[3] + vg[gi].v[3]->y * dy[3];
+			/*d0 = (d0 + 1) / 2;
+			d1 = (d1 + 1) / 2;
+			d2 = (d2 + 1) / 2;
+			d3 = (d3 + 1) / 2;*/
 
-
-			float di0 = d0 + 0.5f * (d1 - d0);
-			float di1 = d2 + 0.5f * (d3 - d2);
-			r_value = di0 + 0.5f * (di1 - di0);
+			float t = float(j%gridsize) / gridsize;
+			float jl = t * t * t * (t * (t * 6 - 15) + 10);
+			t = float(i%gridsize) / gridsize;
+			float jl0 = t * t * t * (t * (t * 6 - 15) + 10);
+			
+			/*float jl = (dx[0] + 1)/2;
+			float jl2 = (dx[2] + 1) / 2;
+			float jl3 = (dy[0] + 1) / 2;*/
+			/*if (vg[gi].v[0]->posx % gridsize == 0) {
+				jl = (dx[1] + 1) / 2;
+			}
+			if (vg[gi].v[2]->posx % gridsize == 0) {
+				jl2 = (dx[3] + 1) / 2;
+			}
+			if (vg[gi].v[0]->posy % gridsize == 0) {
+				jl = (dy[1] + 1) / 2;
+			}*/
+			float di0 = d0 + jl * (d1 - d0);
+			float di1 = d2 + jl * (d3 - d2);
+			r_value = di0 + jl0 * (di1 - di0);
 			
 			
-			if (gi == 0) {
-				r_value = (d3 + 1) / 2;
+			/*if (gi == 0) {
+				r_value = d3;
 			}
 			else if (gi == 1) {
-				r_value = (d2 + 1) / 2;
+				r_value = d2;
 			}
 			else if (gi == 2) {
-				r_value = (d1 + 1) / 2;
+				r_value = d1;
 			}
 			else {
-				r_value = (d0 + 1) / 2;
-			}
+				r_value = d0;
+			}*/
+			r_value = di0 + jl0 * (di1 - di0);
+			r_value = (r_value + 1) / 2;
 			texture[++index] = r_value;
 			texture[++index] = r_value;
 			texture[++index] = r_value;
@@ -348,7 +366,7 @@ int main()
 	GLFWwindow* window = InitWindow();
 	glClearColor(0.1f, 0.5f, 0.7f, 1.0f);
 
-	const int wi = 30, he = 30;
+	const int wi = 500, he = 500;
 
 	float* pic = new float[wi*he * 3];
 
