@@ -10,11 +10,11 @@ namespace UnitTest1
 	{
 	public:
 		
-		TEST_METHOD(test1)
+		/*TEST_METHOD(test1)
 		{
 			UVector u = m_genRandomUnitVector();
 			Assert::AreEqual(1.0f, round((u.x*u.x) + (u.y*u.y)));
-		}
+		}*/
 
 	};
 }

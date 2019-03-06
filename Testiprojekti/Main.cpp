@@ -16,24 +16,25 @@
 #include <GLFW\glfw3.h>
 #include <glm\glm.hpp>
 #include <glm\gtc\matrix_transform.hpp>
+#include "Noise.h"
 
 using namespace glm;
 
 double cursor_xpos, cursor_ypos;
 bool cursorLeftPressed = false;
 
-struct UVector
-{
-	float x;
-	float y;
-	int posx;
-	int posy;
-};
-
-struct vectorGrid 
-{
-	UVector* v[4];
-};
+//struct UVector
+//{
+//	float x;
+//	float y;
+//	int posx;
+//	int posy;
+//};
+//
+//struct vectorGrid 
+//{
+//	UVector* v[4];
+//};
 
 int m_getTextureCoordinate(int width, int height) {
 	int textcoord = width * (height-cursor_ypos) + cursor_xpos;
@@ -174,13 +175,13 @@ GLFWwindow* InitWindow()
 	return window;
 }
 
-UVector m_genRandomUnitVector() {
-	int angle = rand() % 359;
-	UVector u;
-	u.x = cos(float(angle));
-	u.y = sin(float(angle));
-	return u;
-}
+//UVector m_genRandomUnitVector() {
+//	int angle = rand() % 359;
+//	UVector u;
+//	u.x = cos(float(angle));
+//	u.y = sin(float(angle));
+//	return u;
+//}
 
 //void m_genVectors(UVector v) {
 //	for (int i = 0; i < 5; ++i) {
@@ -225,127 +226,140 @@ void m_genCheckerboardTex(int width, int height, float *texture) {
 	}
 }
 
-void m_genRandomNoise(int width, int height, float *texture) {
-	int index = -1;
-	float r_value;
-	for (int i = 0; i < height; ++i) {
-		for (int j = 0; j < width; ++j) {
-			r_value = float(rand() % 100)/100;
-			texture[++index] = r_value;
-			texture[++index] = r_value;
-			texture[++index] = r_value;
-		}
-	}
-}
+//void m_genRandomNoise(int width, int height, float *texture) {
+//	int index = -1;
+//	float r_value;
+//	for (int i = 0; i < height; ++i) {
+//		for (int j = 0; j < width; ++j) {
+//			r_value = float(rand() % 100)/100;
+//			texture[++index] = r_value;
+//			texture[++index] = r_value;
+//			texture[++index] = r_value;
+//		}
+//	}
+//}
 
-void m_genPerlinNoise(const int width,const int height, float *texture) { //kokeile yhdellä ruudulla
-	const int gridsize = 125;
-	const int grids = 4;
-	std::vector<std::vector<float>> perl;
-	UVector unitv[grids+1][grids+1];
-	for (int i = 0; i < grids +1; ++i) {  //generate unit vectors
-		for (int j = 0; j < grids +1; ++j) {
-			unitv[i][j] = m_genRandomUnitVector();
-			unitv[i][j].posx = gridsize*i;
-			unitv[i][j].posy = gridsize*j;
-		}
-	}
-	unitv[1][1].x = 1.0f; //poista
-	unitv[1][1].y = 0.0f;
-	vectorGrid vg[grids*grids]; //generate vector grid
-	int index = 0;
-	for (int i = 0; i < grids; ++i) {  
-		for (int j = 0; j < grids; ++j) {
-			vg[index].v[0] = &unitv[j][i];
-			vg[index].v[1] = &unitv[j+1][i];
-			vg[index].v[2] = &unitv[j][i+1];
-			vg[index].v[3] = &unitv[j+1][i+1];
-			++index;
-		}
-	}
-	index = -1;
-	int gi = -1; //gridindex
-	float r_value = 1.0f;
-	vectorGrid vgi;
-	for (int i = 0; i < height; ++i) {
-		if (i % gridsize == 0) {
-			gi += grids;
-		}
-		gi -= grids -1;
-		for (int j = 0; j < width; ++j) {
-			if (j != 0 && j % gridsize == 0) {
-				++gi;
-			} 
-			if (gi == 3) {
-				gi = 3;
-			}
-			float dx[4];
-			float dy[4];
-			float dl[4];
-			for (int k = 0; k < 4; ++k) {
-				dx[k] = float(j - vg[gi].v[k]->posx);
-				dy[k] = float(i - vg[gi].v[k]->posy);
-				dl[k] = sqrt(abs(dx[k]*dx[k] + dy[k]*dy[k]));
-				if (dl[k] > 0) {
-					dx[k] /= dl[k];
-					dy[k] /= dl[k];
-				}
-				else {
-					dx[k] = vg[gi].v[k]->x;
-					dx[k] = vg[gi].v[k]->y;
-				}
-			}
-			float d0 = vg[gi].v[0]->x * dx[0] + vg[gi].v[0]->y * dy[0];
-			float d1 = vg[gi].v[1]->x * dx[1] + vg[gi].v[1]->y * dy[1];
-			float d2 = vg[gi].v[2]->x * dx[2] + vg[gi].v[2]->y * dy[2];
-			float d3 = vg[gi].v[3]->x * dx[3] + vg[gi].v[3]->y * dy[3];
-			/*d0 = (d0 + 1) / 2;
-			d1 = (d1 + 1) / 2;
-			d2 = (d2 + 1) / 2;
-			d3 = (d3 + 1) / 2;*/
-
-			float t = float(j%gridsize) / gridsize;
-			float jl = t * t * t * (t * (t * 6 - 15) + 10);
-			t = float(i%gridsize) / gridsize;
-			float jl0 = t * t * t * (t * (t * 6 - 15) + 10);
-			
-			/*float jl = (dx[0] + 1)/2;
-			float jl2 = (dx[2] + 1) / 2;
-			float jl3 = (dy[0] + 1) / 2;*/
-			/*if (vg[gi].v[0]->posx % gridsize == 0) {
-				jl = (dx[1] + 1) / 2;
-			}
-			if (vg[gi].v[2]->posx % gridsize == 0) {
-				jl2 = (dx[3] + 1) / 2;
-			}
-			if (vg[gi].v[0]->posy % gridsize == 0) {
-				jl = (dy[1] + 1) / 2;
-			}*/
-			float di0 = d0 + jl * (d1 - d0);
-			float di1 = d2 + jl * (d3 - d2);
-			r_value = di0 + jl0 * (di1 - di0);
-			
-			
-			/*if (gi == 0) {
-				r_value = d3;
-			}
-			else if (gi == 1) {
-				r_value = d2;
-			}
-			else if (gi == 2) {
-				r_value = d1;
-			}
-			else {
-				r_value = d0;
-			}*/
-			r_value = di0 + jl0 * (di1 - di0);
-			r_value = (r_value + 1) / 2;
-			texture[++index] = r_value;
-			texture[++index] = r_value;
-			texture[++index] = r_value;
-		}
-	}
-}
+//void m_octavePerlin(int width, int height) {
+//	const int gridsize = 125;
+//	const int grids = 8;
+//	UVector unitv[grids + 1][grids + 1];
+//	for (int i = 0; i < grids + 1; ++i) {  //generate unit vectors
+//		for (int j = 0; j < grids + 1; ++j) {
+//			unitv[i][j] = m_genRandomUnitVector();
+//			unitv[i][j].posx = width/grids *i;
+//			unitv[i][j].posy = height/grids *j;
+//		}
+//	}
+//}
+//
+//void m_genPerlinNoise(const int width, const int height, int octave, float *texture) { //kokeile yhdellä ruudulla
+//	const int gridsize = 125;
+//	const int grids = 4;
+//	std::vector<std::vector<float>> perl;
+//	UVector unitv[grids+1][grids+1];
+//	for (int i = 0; i < grids +1; ++i) {  //generate unit vectors
+//		for (int j = 0; j < grids +1; ++j) {
+//			unitv[i][j] = m_genRandomUnitVector();
+//			unitv[i][j].posx = gridsize*i;
+//			unitv[i][j].posy = gridsize*j;
+//		}
+//	}
+//	unitv[1][1].x = 1.0f; //poista
+//	unitv[1][1].y = 0.0f;
+//	vectorGrid vg[grids*grids]; //generate vector grid
+//	int index = 0;
+//	for (int i = 0; i < grids; ++i) {  
+//		for (int j = 0; j < grids; ++j) {
+//			vg[index].v[0] = &unitv[j][i];
+//			vg[index].v[1] = &unitv[j+1][i];
+//			vg[index].v[2] = &unitv[j][i+1];
+//			vg[index].v[3] = &unitv[j+1][i+1];
+//			++index;
+//		}
+//	}
+//	index = -1;
+//	int gi = -1; //gridindex
+//	float r_value = 1.0f;
+//	vectorGrid vgi;
+//	for (int i = 0; i < height; ++i) {
+//		if (i % gridsize == 0) {
+//			gi += grids;
+//		}
+//		gi -= grids -1;
+//		for (int j = 0; j < width; ++j) {
+//			if (j != 0 && j % gridsize == 0) {
+//				++gi;
+//			} 
+//			if (gi == 3) {
+//				gi = 3;
+//			}
+//			float dx[4];
+//			float dy[4];
+//			float dl[4];
+//			for (int k = 0; k < 4; ++k) {
+//				dx[k] = float(j - vg[gi].v[k]->posx);
+//				dy[k] = float(i - vg[gi].v[k]->posy);
+//				dl[k] = sqrt(abs(dx[k]*dx[k] + dy[k]*dy[k]));
+//				if (dl[k] > 0) {
+//					dx[k] /= dl[k];
+//					dy[k] /= dl[k];
+//				}
+//				else {
+//					dx[k] = vg[gi].v[k]->x;
+//					dx[k] = vg[gi].v[k]->y;
+//				}
+//			}
+//			float d0 = vg[gi].v[0]->x * dx[0] + vg[gi].v[0]->y * dy[0];
+//			float d1 = vg[gi].v[1]->x * dx[1] + vg[gi].v[1]->y * dy[1];
+//			float d2 = vg[gi].v[2]->x * dx[2] + vg[gi].v[2]->y * dy[2];
+//			float d3 = vg[gi].v[3]->x * dx[3] + vg[gi].v[3]->y * dy[3];
+//			/*d0 = (d0 + 1) / 2;
+//			d1 = (d1 + 1) / 2;
+//			d2 = (d2 + 1) / 2;
+//			d3 = (d3 + 1) / 2;*/
+//
+//			float t = float(j%gridsize) / gridsize;
+//			float jl = t * t * t * (t * (t * 6 - 15) + 10);
+//			t = float(i%gridsize) / gridsize;
+//			float jl0 = t * t * t * (t * (t * 6 - 15) + 10);
+//			
+//			/*float jl = (dx[0] + 1)/2;
+//			float jl2 = (dx[2] + 1) / 2;
+//			float jl3 = (dy[0] + 1) / 2;*/
+//			/*if (vg[gi].v[0]->posx % gridsize == 0) {
+//				jl = (dx[1] + 1) / 2;
+//			}
+//			if (vg[gi].v[2]->posx % gridsize == 0) {
+//				jl2 = (dx[3] + 1) / 2;
+//			}
+//			if (vg[gi].v[0]->posy % gridsize == 0) {
+//				jl = (dy[1] + 1) / 2;
+//			}*/
+//			float di0 = d0 + jl * (d1 - d0);
+//			float di1 = d2 + jl * (d3 - d2);
+//			r_value = di0 + jl0 * (di1 - di0);
+//			
+//			
+//			/*if (gi == 0) {
+//				r_value = d3;
+//			}
+//			else if (gi == 1) {
+//				r_value = d2;
+//			}
+//			else if (gi == 2) {
+//				r_value = d1;
+//			}
+//			else {
+//				r_value = d0;
+//			}*/
+//			r_value = di0 + jl0 * (di1 - di0);
+//			r_value = (r_value + 1) / 2;
+//			texture[++index] = r_value;
+//			texture[++index] = r_value;
+//			texture[++index] = r_value;
+//		}
+//	}
+//}
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
@@ -370,7 +384,8 @@ int main()
 
 	float* pic = new float[wi*he * 3];
 
-	m_genPerlinNoise(wi, he, pic);
+	PerlinNoise pn(wi, he, 125, 4);
+	pn.m_octavePerlin(pic);
 
 	float vertices[] = {
 		//  Position      Color             Texcoords
