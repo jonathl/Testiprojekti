@@ -15,7 +15,7 @@ struct UVector
 	int posy;
 };
 
-struct vectorGrid
+struct vectorGrid 
 {
 	UVector* v[4];
 };
@@ -24,9 +24,9 @@ class PerlinNoise {
 private:
 	int width;
 	int height;
-	int gridsize;
-	int grids;
-	UVector* unitv;
+	int gridsize; //size in pixels of grid
+	int grids; //grids x grids = grid
+	UVector* unitv; //vectors in grid
 
 public:
 
@@ -36,7 +36,7 @@ public:
 		gridsize = gs;
 		grids = g;
 		int vectorsize = (g + 1)*(g + 1);
-		int t = 0;
+		int t = 0; 
 		unitv = new UVector[vectorsize];
 		for (int i = 0; i < vectorsize; ++i) {  //generate unit vectors
 			unitv[i] = m_genRandomUnitVector();
@@ -148,8 +148,8 @@ public:
 				r_value = di0 + jl0 * (di1 - di0);
 				r_value = (r_value + 1) / 2;
 				texture[++index] = r_value;
-				/*texture[++index] = r_value; 
-				texture[++index] = r_value;*/
+				texture[++index] = r_value; 
+				texture[++index] = r_value;
 			}
 		}
 	}
