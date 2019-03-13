@@ -30,20 +30,20 @@ private:
 
 public:
 
-	PerlinNoise(int wi, int he, int gs, int g) {
+	PerlinNoise(int wi, int he, int g) {
 		width = wi;
 		height = he;
-		gridsize = gs;
-		grids = g;
-		int vectorsize = (g + 1)*(g + 1);
+		grids = pow(2,g);
+		gridsize = wi / grids +1;
+		int vectorsize = (grids + 1)*(grids + 1);
 		int t = 0; 
 		unitv = new UVector[vectorsize];
 		for (int i = 0; i < vectorsize; ++i) {  //generate unit vectors
 			unitv[i] = m_genRandomUnitVector();
 			unitv[i].posx = width / grids * t;
-			unitv[i].posy = height / grids * (i/(g+1));
+			unitv[i].posy = height / grids * (i/(grids+1));
 			++t;
-			if (t > g)
+			if (t > grids)
 				t = 0;
 		}
 	}
@@ -90,6 +90,15 @@ public:
 	}
 
 	void m_genPerlinNoise(float *texture, int octave) { 
+		octave = pow(2, octave);
+		if (octave > grids) {
+			std::cout << "we have a problem\n";
+			return;
+		}
+		if ((gridsize * grids) - width > gridsize) {
+			std::cout << "picture too small for that octave\n";
+			return;
+		}
 		vectorGrid* vg = new vectorGrid[grids*grids]; //generate vector grid
 		int index = 0;
 		int go = grids / octave;

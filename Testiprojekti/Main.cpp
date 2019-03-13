@@ -241,28 +241,9 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 	}
 }
 
-inline void setRGB(png_byte *ptr, float val)
-{
-	int v = (int)(val * 767);
-	if (v < 0) v = 0;
-	if (v > 767) v = 767;
-	int offset = v % 256;
-
-	if (v<256) {
-		ptr[0] = 0; ptr[1] = 0; ptr[2] = offset;
-	}
-	else if (v<512) {
-		ptr[0] = 0; ptr[1] = offset; ptr[2] = 255 - offset;
-	}
-	else {
-		ptr[0] = offset; ptr[1] = 255 - offset; ptr[2] = 0;
-	}
-}
-
 void write_row_callback(png_structp png_ptr, png_uint_32 row, int pass){
-	std::cout << row <<"\n";
+	//std::cout << row <<"\n";
 }
-
 void m_saveAsPNG(char* file_name, int width, int height, float *buffer, char* title) {
 	png_structp png_ptr = NULL;
 	png_infop info_ptr = NULL;
@@ -416,18 +397,13 @@ int main()
 	GLFWwindow* window = InitWindow();
 	glClearColor(0.1f, 0.5f, 0.7f, 1.0f);
 
-	const int wi = 2000, he = 2000;
+	const int wi = 500, he = 500;
 
 	float* pic = new float[wi*he * 3];
 
-	PerlinNoise pn(wi, he, 501, 4);
-	pn.m_genPerlinNoise(pic,4);
+	PerlinNoise pn(wi, he, 3);
+	pn.m_genPerlinNoise(pic,3);
 
-
-	png_structp png_ptr = NULL;
-	png_infop info_ptr = NULL;
-	png_bytepp row_pointers = NULL;
-	m_readPNG("helmet_kawaii.png", png_ptr, info_ptr, row_pointers);
 	m_saveAsPNG("kuva.png", wi, he, pic, "k");
 
 	float vertices[] = {
