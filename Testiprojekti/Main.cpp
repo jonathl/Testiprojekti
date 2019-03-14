@@ -397,12 +397,12 @@ int main()
 	GLFWwindow* window = InitWindow();
 	glClearColor(0.1f, 0.5f, 0.7f, 1.0f);
 
-	const int wi = 500, he = 500;
+	const int wi = 2000, he = 2000;
 
 	float* pic = new float[wi*he * 3];
 
-	PerlinNoise pn(wi, he, 3);
-	pn.m_genPerlinNoise(pic,3);
+	WorleyNoise pn(wi, he, 12, 4.0f);
+	pn.m_genWorleyNoise(pic,3);
 
 	m_saveAsPNG("kuva.png", wi, he, pic, "k");
 

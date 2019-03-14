@@ -165,6 +165,70 @@ public:
 
 };
 
+class WorleyNoise {
+private:
+	int width;
+	int height;
+	int gridsize; //size in pixels of grid
+	int grids; //grids x grids = grid
+	float range;
+
+public:
+	WorleyNoise(int wi, int he, int g, float r) {
+		width = wi;
+		height = he;
+		grids = g + 2;
+		gridsize = wi / g + 1;
+		range = r;
+	}
+	
+	void m_genWorleyNoise(float *texture, int octave) {
+		UVector** grid = new UVector*[grids];
+		for (int i = 0; i < grids; ++i) {
+			grid[i] = new UVector[grids];
+			for (int j = 0; j < grids; ++j) {
+				UVector u;
+				u.x = float(rand() % 100) / 100.0f;
+				u.y = float(rand() % 100) / 100.0f;
+				grid[i][j] = u;
+			}
+		}
+
+		int index = -1;
+		int k = 1, l = 1; //tells us where we are in the grid
+		for (int i = 0; i < height; ++i) {
+			k = 1;
+			if (i % gridsize == 0 && i != 0) {
+				++l;
+			}
+			for (int j = 0; j < width; ++j) {
+				if (j % gridsize == 0 && j != 0) {
+					++k;
+				}
+				float posx = float(j - float((k - 1)*gridsize)) / (float)gridsize;
+				float posy = float(i - float((l - 1)*gridsize)) / (float)gridsize;
+				float mdist = 100.0f;
+				for (int o = -1; o <= 1; o++) {
+					for (int p = -1; p <= 1; p++) {
+						//std::cout << grid[k + p][l + o].x << " " << grid[k + p][l + o].y << "\n";
+						float dist = sqrtf(powf(fabsf(o+grid[k+o][l+p].x-posx),2)+ powf(fabsf(p + grid[k + o][l + p].y - posy), 2));
+						if (dist < mdist) {
+							mdist = dist;
+						}
+					}
+				}
+				if (mdist > 1) {
+					mdist = 1;
+				}
+				float r_value = mdist;
+				texture[++index] = r_value;
+				texture[++index] = r_value;
+				texture[++index] = r_value;
+			}
+		}
+	}
+};
+
 //void m_genRandomNoise(int width, int height, float *texture) {
 //	int index = -1;
 //	float r_value;

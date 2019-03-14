@@ -9,4 +9,8 @@ uniform sampler2D tex;
 void main()
 {
     outColor = texture(tex, Texcoord);
+	//if (outColor.r < 0.3f){
+	//	outColor = vec4(0.0f, 0.0f,0.0f,1.0f);
+	//}
+
 }
