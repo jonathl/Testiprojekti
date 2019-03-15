@@ -216,6 +216,20 @@ void m_genCheckerboardTex(int width, int height, float *texture) {
 	}
 }
 
+void m_drawGridOnTex(int width, int height, int gridsize, float *texture) {
+	int index = 0;
+	for (int i = 0; i < height; ++i) {
+		for (int j = 0; j < width; ++j) {
+			if (j % gridsize == 0 || i % gridsize == 0) {
+				texture[index] = 1.0f;
+				texture[index + 1] = 0.2f;
+				texture[index + 2] = 0.7f;
+			}
+			index += 3;
+		}
+	}
+}
+
 //void m_genRandomNoise(int width, int height, float *texture) {
 //	int index = -1;
 //	float r_value;
@@ -401,9 +415,12 @@ int main()
 
 	float* pic = new float[wi*he * 3];
 
-	WorleyNoise pn(wi, he, 12, 4.0f);
+	WorleyNoise pn(wi, he, 4, 4.0f);
+	clock_t begin = clock();
 	pn.m_genWorleyNoise(pic,3);
-
+	clock_t end = clock();
+	std::cout << double(end - begin) / CLOCKS_PER_SEC << "\n";
+	//m_drawGridOnTex(wi, he, 125, pic);
 	m_saveAsPNG("kuva.png", wi, he, pic, "k");
 
 	float vertices[] = {

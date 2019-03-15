@@ -208,15 +208,42 @@ public:
 				float posx = float(j - float((k - 1)*gridsize)) / (float)gridsize;
 				float posy = float(i - float((l - 1)*gridsize)) / (float)gridsize;
 				float mdist = 100.0f;
-				for (int o = -1; o <= 1; o++) {
-					for (int p = -1; p <= 1; p++) {
-						//std::cout << grid[k + p][l + o].x << " " << grid[k + p][l + o].y << "\n";
-						float dist = sqrtf(powf(fabsf(o+grid[k+o][l+p].x-posx),2)+ powf(fabsf(p + grid[k + o][l + p].y - posy), 2));
+				float tx, ty;
+				int minx = -1, miny = -1, maxx = 1, maxy = 1;
+				/*if (posx > 0.75f) {
+					minx = 0;
+				}
+				else if (posx < 0.25f) {
+					maxx = 0;
+				}
+				if (posy > 0.75f) {
+					miny = 0;
+				}
+				else if(posy < 0.25f){
+					maxy = 0;
+				}*/
+				for (int o = minx; o <= maxx; ++o) {
+					for (int p = miny; p <= maxy; ++p) {
+						if (o == 0) {
+							tx = fabsf(grid[k][l + p].x - posx);
+						}
+						else {
+							tx = o + grid[k + o][l + p].x - posx;
+						}
+						if (p == 0) {
+							ty = fabsf(grid[k + o][l].y - posy);
+						}
+						else {
+							ty = p + grid[k + o][l + p].y - posy;
+						}
+						//float dist =sqrtf(powf(fabsf(o+grid[k+o][l+p].x-posx),2)+ powf(fabsf(p + grid[k + o][l + p].y - posy), 2));
+						float dist = powf(tx, 2) + powf(ty, 2);
 						if (dist < mdist) {
 							mdist = dist;
 						}
 					}
 				}
+				mdist = sqrtf(mdist);
 				if (mdist > 1) {
 					mdist = 1;
 				}
