@@ -42,15 +42,15 @@ bool cursorLeftPressed = false;
 //	UVector* v[4];
 //};
 
-int m_getTextureCoordinate(int width, int height) {
-	int textcoord = width * (height-cursor_ypos) + cursor_xpos;
+int m_getTextureCoordinate(int width, int height, int x, int y) {
+	int textcoord = width * (height-y) + x;
 	//std::cout << "texcoord = " << textcoord << "\n";
 	return textcoord;
 }
 
 void m_drawToTexture(GLuint tex,float *texture, int width, int height) { //korjaa reunan yli piirtäminen ja textuurin ko-on vaikuttaminen
 	float color[] = { 1.0f, 0.0f, 0.0f };
-	int index = m_getTextureCoordinate(width, height) * 3;
+	int index = m_getTextureCoordinate(width, height, (int)cursor_xpos, (int)cursor_ypos) * 3;
 	texture[index] = color[0];
 	texture[++index] = color[1];
 	texture[++index] = color[2];
@@ -226,6 +226,92 @@ void m_drawGridOnTex(int width, int height, int gridsize, float *texture) {
 				texture[index + 2] = 0.7f;
 			}
 			index += 3;
+		}
+	}
+}
+
+void m_drawLine(int x0, int y0, int x1, int y1, float *texture, int width, int height) {
+
+	int index2 = m_getTextureCoordinate(width, height, x1, y1) * 3;
+	texture[index2] = 0.3f;
+	texture[index2+ 1] = 0.2f;
+	texture[index2 + 2] = 1.0f;
+	index2 = m_getTextureCoordinate(width, height, x0, y0) * 3;
+	texture[index2] = 0.3f;
+	texture[index2 + 1] = 0.2f;
+	texture[index2 + 2] = 1.0f;
+
+
+	int y2 = y1 - y0;
+	int x2 = x1 - x0;
+	float a = (float)y2 / (float)x2; //y = ax + b
+	float b = y0 - a * x0;
+	int m = 1;
+	int i = 0;
+	float x = x0, y = y0;
+	if (x2 == 0) { //x0 = x1
+		if (y2 < 0) {
+			m = -1;
+		}
+		while ((round(x) != x1 || round(y) != y1))
+		{
+			if (i != 0) {
+				y += 1 * m;
+			}
+			int index = m_getTextureCoordinate(width, height, x, y) * 3;
+			texture[index] = 1.0f;
+			texture[index + 1] = 0.2f;
+			texture[index + 2] = 0.4f;
+			++i;
+		}
+	} 
+
+	else if (y2 == 0) { //y0 = y1
+		if (x2 < 0) {
+			m = -1;
+		}
+		while ((round(x) != x1 || round(y) != y1))
+		{
+			if (i != 0) {
+				x += 1*m;
+			}
+			int index = m_getTextureCoordinate(width, height, x, y) * 3;
+			texture[index] = 1.0f;
+			texture[index + 1] = 0.2f;
+			texture[index + 2] = 0.4f;
+			++i;
+		}
+	}
+
+	else if (a <= 1 && a >= -1) {
+		if (x2 < 0) {
+			m = -1;
+		}
+		while((round(x) != x1 || round(y) != y1))
+		{
+			x += 0.5f * m;
+			y = roundf(a * x + b);
+			int index = m_getTextureCoordinate(width, height, round(x), y) *3;
+			texture[index] = 1.0f;
+			texture[index + 1] = 0.2f;
+			texture[index + 2] = 0.4f;
+			++i;
+		}
+	}
+
+	else {
+		if (y2 < 0) {
+			m = -1;
+		}
+		while ((round(x) != x1 || round(y) != y1))
+		{
+			y += 0.5f * m;
+			x = roundf((y - b)/a);
+			int index = m_getTextureCoordinate(width, height, round(x), y) * 3;
+			texture[index] = 1.0f;
+			texture[index + 1] = 0.2f;
+			texture[index + 2] = 0.4f;
+			++i;
 		}
 	}
 }
@@ -411,7 +497,7 @@ int main()
 	GLFWwindow* window = InitWindow();
 	glClearColor(0.1f, 0.5f, 0.7f, 1.0f);
 
-	const int wi = 2000, he = 2000;
+	const int wi = 500, he = 500;
 
 	float* pic = new float[wi*he * 3];
 
@@ -421,6 +507,10 @@ int main()
 	clock_t end = clock();
 	std::cout << double(end - begin) / CLOCKS_PER_SEC << "\n";
 	//m_drawGridOnTex(wi, he, 125, pic);
+	m_drawLine(20, 1, 20, 40, pic, wi, he);
+	m_drawLine(30, 13, 2, 13, pic, wi, he);
+	m_drawLine(2, 2, 300, 30, pic, wi, he);
+	m_drawLine(34, 3, 20, 400, pic, wi, he);
 	m_saveAsPNG("kuva.png", wi, he, pic, "k");
 
 	float vertices[] = {
