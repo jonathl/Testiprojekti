@@ -289,7 +289,7 @@ void m_drawLine(int x0, int y0, int x1, int y1, float *texture, int width, int h
 		}
 		while((round(x) != x1 || round(y) != y1))
 		{
-			x += 0.5f * m;
+			x += 1 * m;
 			y = roundf(a * x + b);
 			int index = m_getTextureCoordinate(width, height, round(x), y) *3;
 			texture[index] = 1.0f;
@@ -305,13 +305,28 @@ void m_drawLine(int x0, int y0, int x1, int y1, float *texture, int width, int h
 		}
 		while ((round(x) != x1 || round(y) != y1))
 		{
-			y += 0.5f * m;
+			y += 1 * m;
 			x = roundf((y - b)/a);
 			int index = m_getTextureCoordinate(width, height, round(x), y) * 3;
 			texture[index] = 1.0f;
 			texture[index + 1] = 0.2f;
 			texture[index + 2] = 0.4f;
 			++i;
+		}
+	}
+}
+
+void m_drawLine(int2 c0, int2 c1, float *texture, int width, int height) {
+	m_drawLine(c0.x, c0.y, c1.x, c1.y, texture, width, height);
+}
+
+void m_drawFractal(FractalLine f, float *texture, int width, int height) {
+	if (f.fl.empty()) {
+		m_drawLine(f.c0, f.c1, texture, width, height);
+	}
+	else {
+		for each(FractalLine* fra in f.fl) {
+			m_drawFractal(*fra, texture, width, height);
 		}
 	}
 }
@@ -497,7 +512,7 @@ int main()
 	GLFWwindow* window = InitWindow();
 	glClearColor(0.1f, 0.5f, 0.7f, 1.0f);
 
-	const int wi = 500, he = 500;
+	const int wi = 200, he = 200;
 
 	float* pic = new float[wi*he * 3];
 
@@ -507,10 +522,11 @@ int main()
 	clock_t end = clock();
 	std::cout << double(end - begin) / CLOCKS_PER_SEC << "\n";
 	//m_drawGridOnTex(wi, he, 125, pic);
-	m_drawLine(20, 1, 20, 40, pic, wi, he);
-	m_drawLine(30, 13, 2, 13, pic, wi, he);
-	m_drawLine(2, 2, 300, 30, pic, wi, he);
-	m_drawLine(34, 3, 20, 400, pic, wi, he);
+	FractalLine f(50,20,50,150);
+	for(int r = 0; r < 3; ++r)
+		f.iterFractal();
+	m_drawFractal(f, pic, wi, he);
+	//m_drawLine(f.c0.x, f.c0.y, f.c1.x, f.c1.y, pic, wi, he);
 	m_saveAsPNG("kuva.png", wi, he, pic, "k");
 
 	float vertices[] = {

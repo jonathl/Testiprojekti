@@ -4,7 +4,21 @@
 #include <iostream>
 #include <math.h>
 
-
+class int2
+{
+public:
+	int x;
+	int y;
+	int2() {}
+	int2(int x0, int y0) {
+		x = x0;
+		y = y0;
+	}
+	void set(int x0, int y0) {
+		x = x0;
+		y = y0;
+	}
+};
 
 
 struct UVector
@@ -256,7 +270,45 @@ public:
 	}
 };
 
+class FractalLine {
+private:
+public:
+	int2 c0;
+	int2 c1;
+	std::vector<FractalLine*> fl;
 
+	FractalLine() {}
+
+	FractalLine(int tx, int ty, int tx1, int ty1) {
+		c0.set(tx, ty);
+		c1.set(tx1, ty1);
+	}
+
+	FractalLine(int2 tc0, int2 tc1) {
+		c0 = tc0;
+		c1 = tc1;
+	}
+
+	void set(int2 tc0, int2 tc1) {
+		c0 = tc0;
+		c1 = tc1;
+	}
+	void iterFractal() {
+		if (!fl.empty()) {
+			for each (FractalLine* fra in fl)
+			{
+				fra->iterFractal();
+			}
+		}
+		else {
+			int2 nc0((c0.x + (c1.x - c0.x) / 3), (c0.y + (c1.y - c0.y)/3));
+			int2 nc1(nc0.x + nc0.x/3, nc0.y + nc0.y / 3);
+			fl.push_back(new FractalLine(c0, nc0));
+			fl.push_back(new FractalLine(nc0, nc1));
+			fl.push_back(new FractalLine(nc1, c1));
+		}
+	}
+};
 
 //void m_genRandomNoise(int width, int height, float *texture) {
 //	int index = -1;
