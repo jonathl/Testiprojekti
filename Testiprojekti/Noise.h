@@ -20,6 +20,22 @@ public:
 	}
 };
 
+class float2
+{
+public:
+	float x;
+	float y;
+	float2() {}
+	float2(float x0, float y0) {
+		x = x0;
+		y = y0;
+	}
+	void set(float x0, float y0) {
+		x = x0;
+		y = y0;
+	}
+};
+
 
 struct UVector
 {
@@ -293,6 +309,16 @@ public:
 		c0 = tc0;
 		c1 = tc1;
 	}
+
+	void printPoints() {
+		if (fl.empty())
+			return;
+		for each (FractalLine* fra in fl)
+		{
+			std::cout << fra->c0.x <<" " << fra->c0.y << "\n";
+		}
+	}
+
 	void iterFractal() {
 		if (!fl.empty()) {
 			for each (FractalLine* fra in fl)
@@ -301,11 +327,27 @@ public:
 			}
 		}
 		else {
-			int2 nc0((c0.x + (c1.x - c0.x) / 3), (c0.y + (c1.y - c0.y)/3));
-			int2 nc1(nc0.x + nc0.x/3, nc0.y + nc0.y / 3);
-			fl.push_back(new FractalLine(c0, nc0));
-			fl.push_back(new FractalLine(nc0, nc1));
-			fl.push_back(new FractalLine(nc1, c1));
+			float2 nl0[6] = {float2(0,0), float2(0.5f,0), float2(0.5f,0.25f), float2(0.75f,0.25f), float2(0.75f,0), float2(1,0)};
+			float2 nl1[6];
+			//x0 = 0, x1 = 0.5f, x2 = 0.5f , x3= 0.75f, x4 = 0.75f, x5 = 1, y0 = 0, y1 = 0, y2 = 0.25f, y3 = 0.25f, y4 = 0, y5 = 0;
+			float lineLength = sqrtf(powf( c1.x - c0.x ,2)+powf(c1.y - c0.y, 2));
+			float angle = acosf(float(c1.x - c0.x)/lineLength);
+			if(angle*180/3.1415 > 160) {
+				angle = 3.14159 + fabs(asinf(float(c1.y - c0.y) / lineLength));
+			}
+			for (int i = 0; i < 6; ++i) {
+				nl1[i].x = (nl0[i].x * cosf(angle) - nl0[i].y * sinf(angle)) * lineLength + c0.x;
+				nl1[i].y = (nl0[i].y * cosf(angle) + nl0[i].x * sinf(angle)) * lineLength + c0.y;
+			}
+			if (c1.y != round(nl1[5].y)) {
+				std::cout << "problem\n";
+			}
+			std::cout << c1.x << " " << c1.y << " vrt " << nl1[5].x << " " << nl1[5].y << "\n";
+			fl.push_back(new FractalLine(c0, int2(nl1[1].x,nl1[1].y)));
+			fl.push_back(new FractalLine(int2(nl1[1].x, nl1[1].y), int2(nl1[2].x, nl1[2].y)));
+			fl.push_back(new FractalLine(int2(nl1[2].x, nl1[2].y), int2(nl1[3].x, nl1[3].y)));
+			fl.push_back(new FractalLine(int2(nl1[3].x, nl1[3].y), int2(nl1[4].x, nl1[4].y)));
+			fl.push_back(new FractalLine(int2(nl1[4].x, nl1[4].y), c1));
 		}
 	}
 };
