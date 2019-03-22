@@ -310,6 +310,28 @@ public:
 		c1 = tc1;
 	}
 
+	void addLine(int x, int y) {
+		fl.push_back(new FractalLine(c0, c1));
+		fl.push_back(new FractalLine(c1, int2(x, y)));
+		c1 = int2(x, y);
+	}
+
+	void addLines(int2* coord, int amount) {
+		int m = fl.size();
+		if(m == 0)
+			fl.push_back(new FractalLine(c0, c1));
+		fl.push_back(new FractalLine(c1, coord[0]));
+		for (int i = 1; i < amount; ++i) {
+			fl.push_back(new FractalLine(coord[i-1], coord[i]));
+		}
+		c1 = coord[amount-1 +m];
+	}
+
+	void closeLines() {
+		fl.push_back(new FractalLine(fl.back()->c1,c0));
+		c1 = c0;
+	}
+
 	void printPoints() {
 		if (fl.empty())
 			return;
