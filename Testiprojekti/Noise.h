@@ -332,17 +332,24 @@ public:
 			//x0 = 0, x1 = 0.5f, x2 = 0.5f , x3= 0.75f, x4 = 0.75f, x5 = 1, y0 = 0, y1 = 0, y2 = 0.25f, y3 = 0.25f, y4 = 0, y5 = 0;
 			float lineLength = sqrtf(powf( c1.x - c0.x ,2)+powf(c1.y - c0.y, 2));
 			float angle = acosf(float(c1.x - c0.x)/lineLength);
-			if(angle*180/3.1415 > 160) {
-				angle = 3.14159 + fabs(asinf(float(c1.y - c0.y) / lineLength));
+			//abs(c1.x - c0.x) > abs(c1.y - c0.y) , angle*180/3.1415 > 160
+			if (c1.y - c0.y < 0 && c1.x - c0.x > 0) {
+				angle = 3.14159 * 1.5 + fabsf(asinf(float(c1.x - c0.x) / lineLength));
+				//std::cout << "XY:n kaut\n";
 			}
+			else if(c1.y - c0.y < 0 ) {
+				angle = 3.14159 + fabsf(asinf(float(c1.y - c0.y) / lineLength));
+				//std::cout << "Y:n kaut\n";
+			}
+			//std::cout <<angle <<" "<<angle * 180 / 3.1415 <<"\n";
 			for (int i = 0; i < 6; ++i) {
 				nl1[i].x = (nl0[i].x * cosf(angle) - nl0[i].y * sinf(angle)) * lineLength + c0.x;
 				nl1[i].y = (nl0[i].y * cosf(angle) + nl0[i].x * sinf(angle)) * lineLength + c0.y;
 			}
-			if (c1.y != round(nl1[5].y)) {
-				std::cout << "problem\n";
-			}
-			std::cout << c1.x << " " << c1.y << " vrt " << nl1[5].x << " " << nl1[5].y << "\n";
+			//if (c1.y != round(nl1[5].y)) {
+			//	//std::cout << "problem\n";
+			//}
+			//std::cout << c1.x << " " << c1.y << " vrt " << nl1[5].x << " " << nl1[5].y << "\n\n";
 			fl.push_back(new FractalLine(c0, int2(nl1[1].x,nl1[1].y)));
 			fl.push_back(new FractalLine(int2(nl1[1].x, nl1[1].y), int2(nl1[2].x, nl1[2].y)));
 			fl.push_back(new FractalLine(int2(nl1[2].x, nl1[2].y), int2(nl1[3].x, nl1[3].y)));

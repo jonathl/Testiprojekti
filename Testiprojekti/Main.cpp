@@ -161,7 +161,7 @@ GLFWwindow* InitWindow()
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
 	GLFWwindow* window = NULL;
-	window = glfwCreateWindow(512, 512, "Testiprojekti", NULL, NULL);
+	window = glfwCreateWindow(724, 724, "Testiprojekti", NULL, NULL);
 	if (window == NULL) {
 		fprintf(stderr, "Failed to open GLFW window.\n");
 		glfwTerminate();
@@ -512,7 +512,7 @@ int main()
 	GLFWwindow* window = InitWindow();
 	glClearColor(0.1f, 0.5f, 0.7f, 1.0f);
 
-	const int wi = 500, he = 500;
+	const int wi = 1000, he = 1000;
 
 	float* pic = new float[wi*he * 3];
 
@@ -522,10 +522,12 @@ int main()
 	clock_t end = clock();
 	std::cout << double(end - begin) / CLOCKS_PER_SEC << "\n";
 	//m_drawGridOnTex(wi, he, 125, pic);
-	FractalLine f(300,10,200,350);
-	for(int r = 0; r < 3; ++r)
+	FractalLine f(600,10,300,650);
+	for (int r = 0; r < 3; ++r) {
+		//std::cout << "\nITERATE START!\n\n";
 		f.iterFractal();
-	f.printPoints();
+	}
+	//f.printPoints();
 	m_drawFractal(f, pic, wi, he);
 	//m_drawLine(f.c0.x, f.c0.y, f.c1.x, f.c1.y, pic, wi, he);
 	m_saveAsPNG("kuva.png", wi, he, pic, "k");
