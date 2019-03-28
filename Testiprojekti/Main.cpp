@@ -523,12 +523,12 @@ int main()
 	std::cout << double(end - begin) / CLOCKS_PER_SEC << "\n";*/
 	m_genOneColorTex(wi, he, pic, 0.7f, 0.7f, 0.9f);
 	//m_drawGridOnTex(wi, he, 125, pic);
-	FractalLine f(200,100,600,100);
-	f.addLine(600, 500);
+	FractalLine f(200,200,500,200);
+	f.addLine(500, 500);
 	int2 coor[] = { int2(200,500) };
 	f.addLines(coor, 1);
 	f.closeLines();
-	for (int r = 0; r < 5; ++r) { //stackki täyttyy jos yli 5(?)
+	for (int r = 0; r < 5; ++r) {
 		//std::cout << "\nITERATE START!\n\n";
 		f.iterFractal();
 	}

@@ -349,7 +349,16 @@ public:
 			}
 		}
 		else {
-			float2 nl0[6] = {float2(0,0), float2(0.5f,0), float2(0.5f,0.25f), float2(0.75f,0.25f), float2(0.75f,0), float2(1,0)};
+			float2 nl0[3][6] = { 
+				{float2(0,0), float2(0.5f,-0.3f), float2(0.6f,-0.1f), float2(0.75f,-0.25f), float2(0.75f,0), float2(1,0)},
+				{ float2(0,0), float2(0.5f,0), float2(0.5f,-0.25f), float2(0.75f,-0.25f), float2(0.75f,0), float2(1,0) },
+				{ float2(0,0), float2(0.25f,0.0f), float2(0.3f,-0.1f), float2(0.5f,-0.25f), float2(0.75f,0), float2(1,0) } 
+			};
+			int r = rand() % 3;
+			int m = 1;
+			if (rand() % 2 == 0) {
+				m = -1;
+			}
 			float2 nl1[6];
 			//x0 = 0, x1 = 0.5f, x2 = 0.5f , x3= 0.75f, x4 = 0.75f, x5 = 1, y0 = 0, y1 = 0, y2 = 0.25f, y3 = 0.25f, y4 = 0, y5 = 0;
 			float lineLength = sqrtf(powf( c1.x - c0.x ,2)+powf(c1.y - c0.y, 2));
@@ -364,9 +373,12 @@ public:
 				//std::cout << "Y:n kaut\n";
 			}
 			//std::cout <<angle <<" "<<angle * 180 / 3.1415 <<"\n";
+			if (lineLength == 0) {
+				angle = 0;
+			}
 			for (int i = 0; i < 6; ++i) {
-				nl1[i].x = (nl0[i].x * cosf(angle) - nl0[i].y * sinf(angle)) * lineLength + c0.x;
-				nl1[i].y = (nl0[i].y * cosf(angle) + nl0[i].x * sinf(angle)) * lineLength + c0.y;
+				nl1[i].x = (nl0[r][i].x * cosf(angle) - m*nl0[r][i].y * sinf(angle)) * lineLength + c0.x;
+				nl1[i].y = (m*nl0[r][i].y * cosf(angle) + nl0[r][i].x * sinf(angle)) * lineLength + c0.y;
 			}
 			//if (c1.y != round(nl1[5].y)) {
 			//	//std::cout << "problem\n";
@@ -393,3 +405,5 @@ public:
 //		}
 //	}
 //}
+
+//float2 nl0[6] = {float2(0,0), float2(0.5f,0), float2(0.5f,0.25f), float2(0.75f,0.25f), float2(0.75f,0), float2(1,0)};
