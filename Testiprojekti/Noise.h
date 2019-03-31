@@ -393,6 +393,12 @@ public:
 	}
 };
 
+class FractalPlane {
+private:
+public:
+	FractalPlane(){}
+};
+
 //void m_genRandomNoise(int width, int height, float *texture) {
 //	int index = -1;
 //	float r_value;

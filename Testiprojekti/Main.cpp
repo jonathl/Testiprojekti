@@ -26,21 +26,22 @@
 
 using namespace glm;
 
+glm::vec3 lightDirection;
+glm::vec3 lightColor;
+float lightAmount = 1.0f;
+glm::vec3 ambientColor;
+float ambientAmount = 1.0f;
+glm::mat3 invTranspose;
+
+glm::vec3 worldSpaceCameraPos;
+glm::vec3 worldSpaceCameraTarget;
+float shininess = 10.0f;
+glm::vec3 specularColor;
+float specularAmount = 20.0f;
+
 double cursor_xpos, cursor_ypos;
 bool cursorLeftPressed = false;
 
-//struct UVector
-//{
-//	float x;
-//	float y;
-//	int posx;
-//	int posy;
-//};
-//
-//struct vectorGrid 
-//{
-//	UVector* v[4];
-//};
 
 int m_getTextureCoordinate(int width, int height, int x, int y) {
 	int textcoord = width * (height-y) + x;
@@ -233,13 +234,13 @@ void m_drawGridOnTex(int width, int height, int gridsize, float *texture) {
 void m_drawLine(int x0, int y0, int x1, int y1, float *texture, int width, int height) {
 
 	int index2 = m_getTextureCoordinate(width, height, x1, y1) * 3;
-	texture[index2] = 0.3f;
+	texture[index2] = 1.0f;
 	texture[index2+ 1] = 0.2f;
-	texture[index2 + 2] = 1.0f;
+	texture[index2 + 2] = 0.4f;
 	index2 = m_getTextureCoordinate(width, height, x0, y0) * 3;
-	texture[index2] = 0.3f;
+	texture[index2] = 1.0f;
 	texture[index2 + 1] = 0.2f;
-	texture[index2 + 2] = 1.0f;
+	texture[index2 + 2] = 0.4f;
 
 
 	int y2 = y1 - y0;
@@ -506,11 +507,73 @@ void m_readPNG(char* file_name, png_structp png_ptr, png_infop info_ptr, png_byt
 	png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
 }
 
+GLuint setVAO() {
+
+	float vertices[] = {
+		//  Position      Color             Texcoords
+		-1.0f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Top-left
+		1.0f,  1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, // Top-right
+		-1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom-right
+		1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f  // Bottom-left
+	};
+
+	float normals[] = {
+		0.0f, 0.0f, -1.0f, // Top-left
+		0.0f, 0.0f, -1.0f, // Top-right
+		0.0f, 0.0f, -1.0f, // Bottom-right
+		0.0f, 0.0f, -1.0f // Bottom-left
+	};
+
+	//-1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Top-left
+	//	1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, // Top-right
+	//	-1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom-right
+	//	1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f  // Bottom-left
+
+	unsigned int indices[] = {
+		0, 1, 2, // first triangle
+		1, 2, 3  // second triangle
+	};
+	unsigned int VNO, VBO, VAO, EBO;
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VNO);
+	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
+
+	glBindVertexArray(VAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VNO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	// position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	// color attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(2 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	// texture coord attribute
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+	// normal attribute
+	glBindBuffer(GL_ARRAY_BUFFER, VNO);
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(3);
+
+	return VAO;
+}
+
 int main()
 {
 	srand(time(NULL));
 	GLFWwindow* window = InitWindow();
 	glClearColor(0.1f, 0.5f, 0.7f, 1.0f);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
 
 	const int wi = 700, he = 700;
 
@@ -537,40 +600,7 @@ int main()
 	//m_drawLine(f.c0.x, f.c0.y, f.c1.x, f.c1.y, pic, wi, he);
 	m_saveAsPNG("kuva.png", wi, he, pic, "k");
 
-	float vertices[] = {
-		//  Position      Color             Texcoords
-		-1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Top-left
-		1.0f,  1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, // Top-right
-		-1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom-right
-		1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f  // Bottom-left
-	};
-
-	unsigned int indices[] = {
-		0, 1, 2, // first triangle
-		1, 2, 3  // second triangle
-	};
-	unsigned int VBO, VAO, EBO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
-
-	glBindVertexArray(VAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	// position attribute
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	// color attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(2 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	// texture coord attribute
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(5 * sizeof(float)));
-	glEnableVertexAttribArray(2);
+	GLuint VAO = setVAO();
 
 	GLuint tex;
 	glGenTextures(1, &tex);
@@ -584,6 +614,59 @@ int main()
 
 	GLuint programID = LoadShaders("VertexShader.vertexshader", "FragmentShader.fragmentshader");
 
+
+	GLuint MMMatrixID = glGetUniformLocation(programID, "MM");
+	GLuint VMMatrixID = glGetUniformLocation(programID, "VM");
+	GLuint PVMatrixID = glGetUniformLocation(programID, "PV");
+	GLuint AmbientAmountID = glGetUniformLocation(programID, "AmbientAmount");
+	GLuint AmbientColorID = glGetUniformLocation(programID, "AmbientColor");
+	GLuint LightAmountID = glGetUniformLocation(programID, "LightAmount");
+	GLuint LightColorID = glGetUniformLocation(programID, "LightColor");
+	GLuint LightDirectionID = glGetUniformLocation(programID, "LightDirection");
+	GLuint ITMatrixID = glGetUniformLocation(programID, "IT");
+
+	GLuint SpecularAmountID = glGetUniformLocation(programID, "SpecularAmount");
+	GLuint SpecularColorID = glGetUniformLocation(programID, "SpecularColor");
+	GLuint WorldSpaceCameraDirID = glGetUniformLocation(programID, "WorldSpaceCameraDir");
+	GLuint ShininessID = glGetUniformLocation(programID, "Shininess");
+
+
+	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 100.0f);
+
+	worldSpaceCameraPos.x = 0.0f;
+	worldSpaceCameraPos.y = 0.0f;
+	worldSpaceCameraPos.z = -1.0f;
+	worldSpaceCameraTarget.x = 0.0f;
+	worldSpaceCameraTarget.y = 0.0f;
+	worldSpaceCameraTarget.z = 1.0f;
+
+	glm::mat4 View = glm::lookAt(
+		worldSpaceCameraTarget,
+		worldSpaceCameraPos,
+		glm::vec3(0, 1, 0)
+	);
+
+	glm::mat4 Model = glm::mat4(1.0f);
+
+	ambientColor.r = 1.0f;
+	ambientColor.g = 1.0f;
+	ambientColor.b = 1.0f;
+
+	lightDirection.x = 0.0f;
+	lightDirection.y = 0.0f;
+	lightDirection.z = 1.0f;
+
+	lightColor.x = 1.0f;
+	lightColor.y = 1.0f;
+	lightColor.z = 1.0f;
+
+	specularColor.x = 1.0f;
+	specularColor.y = 1.0f;
+	specularColor.z = 1.0f;
+
+	glm::vec3 cameraDirection = glm::normalize(worldSpaceCameraPos - worldSpaceCameraTarget);
+
+
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
 
 	do {
@@ -591,11 +674,47 @@ int main()
 
 		glUseProgram(programID);
 
+
+		glUniformMatrix4fv(MMMatrixID, 1, GL_FALSE, &Model[0][0]);
+		glUniformMatrix4fv(VMMatrixID, 1, GL_FALSE, &View[0][0]);
+		glUniformMatrix4fv(PVMatrixID, 1, GL_FALSE, &Projection[0][0]);
+
+		invTranspose = glm::transpose(glm::inverse(glm::mat3(Model)));
+		glUniformMatrix3fv(ITMatrixID, 1, GL_FALSE, &invTranspose[0][0]);
+
+
+
 		glBindTexture(GL_TEXTURE_2D, tex);
 
 		glBindVertexArray(VAO);
 
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+
+
+		glUniform1f(AmbientAmountID, ambientAmount);
+		glUniform3f(AmbientColorID, ambientColor.x, ambientColor.y, ambientColor.z);
+		glUniform1f(LightAmountID, lightAmount);
+		glUniform3f(LightColorID, lightColor.x, lightColor.y, lightColor.z);
+		glUniform3f(LightDirectionID, lightDirection.x, lightDirection.y, lightDirection.z);
+		glUniform3f(SpecularColorID,
+			specularColor.x,
+			specularColor.y,
+			specularColor.z);
+		glUniform3f(WorldSpaceCameraDirID,
+			cameraDirection.x,
+			cameraDirection.y,
+			cameraDirection.z);
+		glUniform1f(
+			ShininessID,
+			shininess
+		);
+		glUniform1f(
+			SpecularAmountID,
+			specularAmount
+		);
+
+
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
