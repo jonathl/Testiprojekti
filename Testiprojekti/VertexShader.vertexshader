@@ -23,8 +23,8 @@ uniform float SpecularAmount;
 
 void main()
 {
-	//vec3 normalDirection = normalize(IT * vertexNormal);
-	vec3 normalDirection = normalize(vertexNormal);
+	vec3 normalDirection = normalize(IT * vertexNormal);
+	//vec3 normalDirection = normalize(vertexNormal);
     gl_Position = PV * VM * MM * vec4(vertexPosition_modelspace,1);
 	float nd = max(0.0, dot(normalDirection, LightDirection));
 	vec3 r = reflect(LightDirection, normalDirection);

@@ -26,4 +26,9 @@
     <None Include="FragmentShader.fragmentshader" />
     <None Include="VertexShader.vertexshader" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="3D_object.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
 </Project>

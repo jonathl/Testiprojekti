@@ -123,6 +123,9 @@
     <None Include="FragmentShader.fragmentshader" />
     <None Include="VertexShader.vertexshader" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="3D_object.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

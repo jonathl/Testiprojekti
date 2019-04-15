@@ -19,6 +19,7 @@
 #include <glm\glm.hpp>
 #include <glm\gtc\matrix_transform.hpp>
 #include "Noise.h"
+#include "3D_object.h"
 
 #include <png.h>
 #include <zlib.h>
@@ -41,12 +42,18 @@ float specularAmount = 20.0f;
 
 double cursor_xpos, cursor_ypos;
 bool cursorLeftPressed = false;
+bool cursorRightPressed = false;
 
 
 int m_getTextureCoordinate(int width, int height, int x, int y) {
-	int textcoord = width * (height-y) + x;
+	int textcoord = width * (height-y) - x;
 	//std::cout << "texcoord = " << textcoord << "\n";
 	return textcoord;
+}
+
+void m_updateTexture(GLuint tex, float *texture, int width, int height) {
+	glBindTexture(GL_TEXTURE_2D, tex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, texture);
 }
 
 void m_drawToTexture(GLuint tex,float *texture, int width, int height) { //korjaa reunan yli piirtäminen ja textuurin ko-on vaikuttaminen
@@ -57,6 +64,57 @@ void m_drawToTexture(GLuint tex,float *texture, int width, int height) { //korja
 	texture[++index] = color[2];
 	glBindTexture(GL_TEXTURE_2D, tex);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, texture);
+}
+
+int cam = 0;
+
+void m_colorAdjacent(float *color, float *fillcolor, int texel, float *texture, int width, int height) { //poista recursio, stackki täyttyy
+	if ((color[0] != fillcolor[0]) && (color[1] != fillcolor[1]) && (color[2] != fillcolor[2])) {
+		texture[texel] = fillcolor[0];
+		texture[texel+1] = fillcolor[1];
+		texture[texel+2] = fillcolor[2];
+		if (texel > width * 3) { //up
+			m_colorAdjacent(color, fillcolor, texel - width*3, texture, width, height);
+		}
+		if (texel % (width * 3) != 0) { //left
+			m_colorAdjacent(color, fillcolor, texel - 3, texture, width, height);
+		}
+		if (texel % (width * 3) != (width * 3) - 1) { //right
+			m_colorAdjacent(color, fillcolor, texel + 3, texture, width, height);
+		}
+		if (texel < width * 3 * (height-1)) { //down
+			m_colorAdjacent(color, fillcolor, texel + width*3, texture, width, height);
+		}
+	}
+}
+
+void m_bucketToolTexture(GLuint tex, float *texture, int width, int height) {
+	float fillcolor[] = { 1.0f, 1.0f, 1.0f };
+	int index = m_getTextureCoordinate(width, height, (int)cursor_xpos, (int)cursor_ypos) * 3;
+	float color[] = { texture[index], texture[index+1], texture[index+2] };// onnistuu ylittämään max arvon??
+	m_colorAdjacent(color, fillcolor, index, texture, width, height);
+	m_updateTexture(tex, texture, width, height);
+}
+
+void m_bucketToolTexture2(GLuint tex, float *texture, int width, int height) {
+	float fillcolor[] = { 1.0f, 1.0f, 1.0f };
+	int o = m_getTextureCoordinate(width, height, (int)cursor_xpos, (int)cursor_ypos) * 3;
+	int index = o;
+	int oy = o;
+	float color[] = { texture[index], texture[index + 1], texture[index + 2] };
+
+	while ((texture[index] != fillcolor[0]) && (texture[index + 1] != fillcolor[1]) && (texture[index + 2] != fillcolor[2])) { //vertaa coloriin
+		while ((texture[index] != fillcolor[0]) && (texture[index + 1] != fillcolor[1]) && (texture[index + 2] != fillcolor[2])) {
+			texture[index] = fillcolor[0];
+			texture[index + 1] = fillcolor[1];
+			texture[index + 2] = fillcolor[2];
+			index += 3;
+		}
+		oy += width * 3;
+		index = oy;
+	}
+	
+	m_updateTexture(tex, texture, width, height);
 }
 
 GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path) {
@@ -332,6 +390,36 @@ void m_drawFractal(FractalLine f, float *texture, int width, int height) {
 	}
 }
 
+void m_combinePictures(float *pic1, float *pic2, float *texture, float str, int width, int height) {
+	for (int i = 0; i < height*width * 3; ++i)
+	{
+		texture[i] = pic1[i] + str * (pic2[i] - pic1[i]);
+	}
+	/*int index = -1;
+	for (int i = 0; i < height; ++i) {
+		for (int j = 0; j < width; ++j) {
+			texture[++index] = pic1[++index] + str * (pic2[++index] - pic1[++index]);
+			texture[++index] = pic1[++index] + str * (pic2[++index] - pic1[++index]);
+			texture[++index] = pic1[++index] + str * (pic2[++index] - pic1[++index]);
+		}
+	}*/
+}
+
+float m_changeSkale(float oldmin, float oldmax, float newmin, float newmax, float value) {
+	float p = (value - oldmin) / (oldmax - oldmin);
+	return p * (newmax - newmin) + newmin;
+}
+
+void m_addContrast(float *texture, float str, int width, int height) {
+	float min = atanf(2 * 3.141 * (-0.5)) / (3.141 / 2), max = atanf(2 * 3.141 *  0.5f) / (3.141 / 2);
+	float value;
+	for (int i = 0; i < height*width * 3; ++i)
+	{
+		value = atanf(2 * 3.141 * (texture[i] - 0.5f)) / (3.141 / 2);
+		texture[i] = m_changeSkale(min, max, 0, 1, value);
+	}
+}
+
 //void m_genRandomNoise(int width, int height, float *texture) {
 //	int index = -1;
 //	float r_value;
@@ -348,7 +436,10 @@ void m_drawFractal(FractalLine f, float *texture, int width, int height) {
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
-		std::cout << "moi";
+		cursorRightPressed = true;
+	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
+		cursorRightPressed = false;
+	}
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
 		cursorLeftPressed = true;
 	}
@@ -507,14 +598,49 @@ void m_readPNG(char* file_name, png_structp png_ptr, png_infop info_ptr, png_byt
 	png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
 }
 
+void m_genCube() {
+
+}
+
+void m_genPlane(int x, int y) {
+	int size = x * y * 3;
+	float* verts = new float[size];
+	int index = -1;
+	for (int i = 0; i < y; ++i) {
+		for (int j = 0; j < x; ++j) {
+			verts[++index] = j;
+			verts[++index] = i;
+			verts[++index] = 0;
+		}
+	}
+
+	for (int i = 0; i < size; ++i) {
+		verts[i] /= x;
+	}
+
+	int faces = (x - 1)*(y - 1);
+	float* indices = new float[faces*2*3];
+	index = -1;
+	for (int i = 0; i < y - 1; ++i) {
+		for (int j = 0; j < x - 1; ++i) {
+			indices[++index] = j + i*j;
+			indices[++index] = j + 1 + (i + 1)*j;
+			indices[++index] = j + (i + 1)*j;
+			indices[++index] = j + i*j;
+			indices[++index] = j + 1 + i*j;
+			indices[++index] = j + 1 + (i + 1)*j;
+		}
+	}
+}
+
 GLuint setVAO() {
 
 	float vertices[] = {
 		//  Position      Color             Texcoords
 		-1.0f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Top-left
 		1.0f,  1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, // Top-right
-		-1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom-right
-		1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f  // Bottom-left
+		-1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom-left
+		1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f  // Bottom-right
 	};
 
 	float normals[] = {
@@ -533,6 +659,7 @@ GLuint setVAO() {
 		0, 1, 2, // first triangle
 		1, 2, 3  // second triangle
 	};
+
 	unsigned int VNO, VBO, VAO, EBO;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VNO);
@@ -569,6 +696,7 @@ GLuint setVAO() {
 
 int main()
 {
+	std::cout << m_changeSkale(-1, 1, 0, 1, 0) <<"\n";
 	srand(time(NULL));
 	GLFWwindow* window = InitWindow();
 	glClearColor(0.1f, 0.5f, 0.7f, 1.0f);
@@ -578,25 +706,34 @@ int main()
 	const int wi = 700, he = 700;
 
 	float* pic = new float[wi*he * 3];
+	float* pic2 = new float[wi*he * 3];
 
-	/*WorleyNoise pn(wi, he, 4, 4.0f);
+	PerlinNoise pn(wi, he, 6);
+	WorleyNoise wn(wi, he, 8, 5);
+
+	wn.m_genWorleyNoise(pic2, 4);
 	clock_t begin = clock();
-	pn.m_genWorleyNoise(pic,3);
+	pn.m_genPerlinNoise(pic,3);
 	clock_t end = clock();
-	std::cout << double(end - begin) / CLOCKS_PER_SEC << "\n";*/
-	m_genOneColorTex(wi, he, pic, 0.7f, 0.7f, 0.9f);
+	std::cout << double(end - begin) / CLOCKS_PER_SEC << "\n";
+	m_saveAsPNG("perlin.png", wi, he, pic, "k");
+	m_addContrast(pic, 4, wi, he);
+	m_saveAsPNG("worley.png", wi, he, pic, "k");
+	m_combinePictures(pic, pic2, pic, 0.4f, wi, he);
+
+	//m_genOneColorTex(wi, he, pic, 0.7f, 0.7f, 0.9f);
 	//m_drawGridOnTex(wi, he, 125, pic);
-	FractalLine f(200,200,500,200);
-	f.addLine(500, 500);
-	int2 coor[] = { int2(200,500) };
-	f.addLines(coor, 1);
-	f.closeLines();
-	for (int r = 0; r < 5; ++r) {
-		//std::cout << "\nITERATE START!\n\n";
-		f.iterFractal();
-	}
-	//f.printPoints();
-	m_drawFractal(f, pic, wi, he);
+	//FractalLine f(200, 200, 500, 200);
+	//f.addLine(500, 500);
+	//int2 coor[] = { int2(200,500) };
+	//f.addLines(coor, 1);
+	//f.closeLines();
+	//for (int r = 0; r < 3; ++r) {
+	//	//std::cout << "\nITERATE START!\n\n";
+	//	f.iterFractal();
+	//}
+	////f.printPoints();
+	//m_drawFractal(f, pic, wi, he);
 	//m_drawLine(f.c0.x, f.c0.y, f.c1.x, f.c1.y, pic, wi, he);
 	m_saveAsPNG("kuva.png", wi, he, pic, "k");
 
@@ -631,22 +768,37 @@ int main()
 	GLuint ShininessID = glGetUniformLocation(programID, "Shininess");
 
 
-	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 100.0f);
+	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 4.0f / 4.0f, 0.1f, 100.0f);
 
 	worldSpaceCameraPos.x = 0.0f;
 	worldSpaceCameraPos.y = 0.0f;
-	worldSpaceCameraPos.z = -1.0f;
+	worldSpaceCameraPos.z = -2.4250f;
 	worldSpaceCameraTarget.x = 0.0f;
 	worldSpaceCameraTarget.y = 0.0f;
 	worldSpaceCameraTarget.z = 1.0f;
 
 	glm::mat4 View = glm::lookAt(
-		worldSpaceCameraTarget,
 		worldSpaceCameraPos,
-		glm::vec3(0, 1, 0)
+		worldSpaceCameraTarget,
+		glm::vec3(1, 0, 0)
 	);
 
-	glm::mat4 Model = glm::mat4(1.0f);
+	glm::mat4 Model = glm::mat4(3.0f);
+
+	/* MVP Matrices Debug
+	for (int i = 0; i < Projection.length(); ++i) {
+		std::cout << Projection[i].r << " " << Projection[i].g << " " << Projection[i].b << " " << Projection[i].a << "\n";
+	}
+	std::cout << "\n";
+
+	for (int i = 0; i < Model.length(); ++i) {
+		std::cout << View[i].r << " " << View[i].g << " " << View[i].b << " " << View[i].a <<"\n";
+	}
+	std::cout << "\n";
+
+	for (int i = 0; i < Model.length(); ++i) {
+		std::cout << Model[i].r << " " << Model[i].g << " " << Model[i].b << " " << Model[i].a << "\n";
+	}*/
 
 	ambientColor.r = 1.0f;
 	ambientColor.g = 1.0f;
@@ -721,6 +873,10 @@ int main()
 		if (cursorLeftPressed) {
 			glfwGetCursorPos(window, &cursor_xpos, &cursor_ypos);
 			m_drawToTexture(tex, pic, wi, he);
+		}
+		if (cursorRightPressed) {
+			glfwGetCursorPos(window, &cursor_xpos, &cursor_ypos);
+			m_bucketToolTexture2(tex, pic, wi, he);
 		}
 	} while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0);
 
