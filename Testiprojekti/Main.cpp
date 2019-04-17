@@ -66,8 +66,6 @@ void m_drawToTexture(GLuint tex,float *texture, int width, int height) { //korja
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, texture);
 }
 
-int cam = 0;
-
 void m_colorAdjacent(float *color, float *fillcolor, int texel, float *texture, int width, int height) { //poista recursio, stackki täyttyy
 	if ((color[0] != fillcolor[0]) && (color[1] != fillcolor[1]) && (color[2] != fillcolor[2])) {
 		texture[texel] = fillcolor[0];
@@ -410,12 +408,15 @@ float m_changeSkale(float oldmin, float oldmax, float newmin, float newmax, floa
 	return p * (newmax - newmin) + newmin;
 }
 
-void m_addContrast(float *texture, float str, int width, int height) {
-	float min = atanf(2 * 3.141 * (-0.5)) / (3.141 / 2), max = atanf(2 * 3.141 *  0.5f) / (3.141 / 2);
+void m_addContrast(float *texture, float str, float displacement, int width, int height) {
+	if (str == 0) {
+		return;
+	}
+	float min = atanf(2 * 3.141 * str * (-0.5f + displacement)), max = atanf(2 * 3.141 * str *  (0.5f + displacement));
 	float value;
 	for (int i = 0; i < height*width * 3; ++i)
 	{
-		value = atanf(2 * 3.141 * (texture[i] - 0.5f)) / (3.141 / 2);
+		value = atanf(2 * 3.141 * str * (texture[i] - 0.5f + displacement));
 		texture[i] = m_changeSkale(min, max, 0, 1, value);
 	}
 }
@@ -717,8 +718,8 @@ int main()
 	clock_t end = clock();
 	std::cout << double(end - begin) / CLOCKS_PER_SEC << "\n";
 	m_saveAsPNG("perlin.png", wi, he, pic, "k");
-	m_addContrast(pic, 4, wi, he);
-	m_saveAsPNG("worley.png", wi, he, pic, "k");
+	m_addContrast(pic2, 1.0f, -0.1f, wi, he);
+	m_saveAsPNG("worley.png", wi, he, pic2, "k");
 	m_combinePictures(pic, pic2, pic, 0.4f, wi, he);
 
 	//m_genOneColorTex(wi, he, pic, 0.7f, 0.7f, 0.9f);
