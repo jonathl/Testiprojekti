@@ -24,8 +24,64 @@
 #include <png.h>
 #include <zlib.h>
 
-
 using namespace glm;
+
+class My_window {
+private:
+
+	glm::vec3 lightDirection;
+	glm::vec3 lightColor;
+	float lightAmount = 1.0f;
+	glm::vec3 ambientColor;
+	float ambientAmount = 1.0f;
+	glm::mat3 invTranspose;
+
+	glm::vec3 worldSpaceCameraPos;
+	glm::vec3 worldSpaceCameraTarget;
+	float shininess = 10.0f;
+	glm::vec3 specularColor;
+	float specularAmount = 20.0f;
+public:
+	GLFWwindow* window;
+	My_window() {
+		window = InitWindow();
+	}
+
+	GLFWwindow* InitWindow()
+	{
+		if (!glfwInit())
+		{
+			fprintf(stderr, "GLFW failed!\n");
+			return NULL;
+		}
+
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+		glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+
+		GLFWwindow* window = NULL;
+		window = glfwCreateWindow(724, 724, "Testiprojekti", NULL, NULL);
+		if (window == NULL) {
+			fprintf(stderr, "Failed to open GLFW window.\n");
+			glfwTerminate();
+			return NULL;
+		}
+
+		glfwMakeContextCurrent(window);
+
+		if (glewInit() != GLEW_OK) {
+			fprintf(stderr, "Failed to initialize GLEW\n");
+			getchar();
+			glfwTerminate();
+			return NULL;
+		}
+
+		glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+		return window;
+	}
+};
+
 
 glm::vec3 lightDirection;
 glm::vec3 lightColor;
@@ -403,7 +459,7 @@ void m_combinePictures(float *pic1, float *pic2, float *texture, float str, int 
 	}*/
 }
 
-float m_changeSkale(float oldmin, float oldmax, float newmin, float newmax, float value) {
+float m_changeScale(float oldmin, float oldmax, float newmin, float newmax, float value) {
 	float p = (value - oldmin) / (oldmax - oldmin);
 	return p * (newmax - newmin) + newmin;
 }
@@ -417,7 +473,7 @@ void m_addContrast(float *texture, float str, float displacement, int width, int
 	for (int i = 0; i < height*width * 3; ++i)
 	{
 		value = atanf(2 * 3.141 * str * (texture[i] - 0.5f + displacement));
-		texture[i] = m_changeSkale(min, max, 0, 1, value);
+		texture[i] = m_changeScale(min, max, 0, 1, value);
 	}
 }
 
@@ -697,9 +753,10 @@ GLuint setVAO() {
 
 int main()
 {
-	std::cout << m_changeSkale(-1, 1, 0, 1, 0) <<"\n";
 	srand(time(NULL));
 	GLFWwindow* window = InitWindow();
+	My_window* w2 = new My_window();
+	GLFWwindow* currentWindow = w2->window;
 	glClearColor(0.1f, 0.5f, 0.7f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -718,7 +775,7 @@ int main()
 	clock_t end = clock();
 	std::cout << double(end - begin) / CLOCKS_PER_SEC << "\n";
 	m_saveAsPNG("perlin.png", wi, he, pic, "k");
-	m_addContrast(pic2, 1.0f, -0.1f, wi, he);
+	m_addContrast(pic2, 0.2f, 0.3f, wi, he);
 	m_saveAsPNG("worley.png", wi, he, pic2, "k");
 	m_combinePictures(pic, pic2, pic, 0.4f, wi, he);
 
@@ -821,6 +878,7 @@ int main()
 
 
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
+	glfwSetMouseButtonCallback(w2->window, mouse_button_callback);
 
 	do {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -869,9 +927,10 @@ int main()
 
 
 
-		glfwSwapBuffers(window);
+		glfwSwapBuffers(currentWindow);
 		glfwPollEvents();
 		if (cursorLeftPressed) {
+			//glfwMakeContextCurrent(window);
 			glfwGetCursorPos(window, &cursor_xpos, &cursor_ypos);
 			m_drawToTexture(tex, pic, wi, he);
 		}
@@ -879,7 +938,7 @@ int main()
 			glfwGetCursorPos(window, &cursor_xpos, &cursor_ypos);
 			m_bucketToolTexture2(tex, pic, wi, he);
 		}
-	} while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0);
+	} while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(currentWindow) == 0);
 
 	glfwTerminate();
 }
