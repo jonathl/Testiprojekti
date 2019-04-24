@@ -27,7 +27,7 @@
 using namespace glm;
 
 class My_window {
-private:
+public:
 
 	glm::vec3 lightDirection;
 	glm::vec3 lightColor;
@@ -41,12 +41,81 @@ private:
 	float shininess = 10.0f;
 	glm::vec3 specularColor;
 	float specularAmount = 20.0f;
-public:
+
+	GLuint programID;
+	GLuint MMMatrixID;
+	GLuint VMMatrixID;
+	GLuint PVMatrixID;
+	GLuint AmbientAmountID;
+	GLuint AmbientColorID;
+	GLuint LightAmountID;
+	GLuint LightColorID;
+	GLuint LightDirectionID;
+	GLuint ITMatrixID;
+
+	GLuint SpecularAmountID;
+	GLuint SpecularColorID;
+	GLuint WorldSpaceCameraDirID;
+	GLuint ShininessID;
+
+	glm::mat4 Projection;
+	glm::mat4 View;
+	glm::mat4 Model;
+
+	glm::vec3 cameraDirection = glm::normalize(worldSpaceCameraPos - worldSpaceCameraTarget);
+
 	GLFWwindow* window;
+	GLuint VAO;
+	
+	GLuint tex;
+
 	My_window() {
 		window = InitWindow();
+		glClearColor(0.1f, 0.5f, 0.7f, 1.0f);
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+		setVAO();
+		setMVP();
+		setProgram();
+		setLighting();
 	}
 
+	void setProgram() {
+		programID = LoadShaders("VertexShader.vertexshader", "FragmentShader.fragmentshader");
+		MMMatrixID = glGetUniformLocation(programID, "MM");
+		VMMatrixID = glGetUniformLocation(programID, "VM");
+		PVMatrixID = glGetUniformLocation(programID, "PV");
+		AmbientAmountID = glGetUniformLocation(programID, "AmbientAmount");
+		AmbientColorID = glGetUniformLocation(programID, "AmbientColor");
+		LightAmountID = glGetUniformLocation(programID, "LightAmount");
+		LightColorID = glGetUniformLocation(programID, "LightColor");
+		LightDirectionID = glGetUniformLocation(programID, "LightDirection");
+		ITMatrixID = glGetUniformLocation(programID, "IT");
+
+		SpecularAmountID = glGetUniformLocation(programID, "SpecularAmount");
+		SpecularColorID = glGetUniformLocation(programID, "SpecularColor");
+		WorldSpaceCameraDirID = glGetUniformLocation(programID, "WorldSpaceCameraDir");
+		ShininessID = glGetUniformLocation(programID, "Shininess");
+
+	}
+	void setMVP() {
+		Projection = glm::perspective(glm::radians(45.0f), 4.0f / 4.0f, 0.1f, 100.0f);
+
+		worldSpaceCameraPos.x = 0.0f;
+		worldSpaceCameraPos.y = 0.0f;
+		worldSpaceCameraPos.z = -2.4250f; //2
+		worldSpaceCameraTarget.x = 0.0f;
+		worldSpaceCameraTarget.y = 0.0f;
+		worldSpaceCameraTarget.z = 1.0f;
+
+		View = glm::lookAt(
+			worldSpaceCameraPos,
+			worldSpaceCameraTarget,
+			glm::vec3(1, 0, 0)
+		);
+
+		Model = glm::mat4(3.0f);
+	}
 	GLFWwindow* InitWindow()
 	{
 		if (!glfwInit())
@@ -80,21 +149,230 @@ public:
 		glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 		return window;
 	}
+	void setVAO() {
+		glfwMakeContextCurrent(window);
+		float vertices[] = {
+			//  Position      Color             Texcoords
+			-1.0f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Top-left
+			1.0f,  1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, // Top-right
+			-1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom-left
+			1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f  // Bottom-right
+		};
+
+		float normals[] = {
+			0.0f, 0.0f, -1.0f, // Top-left
+			0.0f, 0.0f, -1.0f, // Top-right
+			0.0f, 0.0f, -1.0f, // Bottom-right
+			0.0f, 0.0f, -1.0f // Bottom-left
+		};
+
+		//-1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Top-left
+		//	1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, // Top-right
+		//	-1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom-right
+		//	1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f  // Bottom-left
+
+		unsigned int indices[] = {
+			0, 1, 2, // first triangle
+			1, 2, 3  // second triangle
+		};
+
+		unsigned int VNO, VBO, mVAO, EBO;
+		glGenVertexArrays(1, &mVAO);
+		glGenBuffers(1, &VNO);
+		glGenBuffers(1, &VBO);
+		glGenBuffers(1, &EBO);
+
+		glBindVertexArray(mVAO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, VNO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
+
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+		// position attribute
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+		// color attribute
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(2 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+		// texture coord attribute
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+		// normal attribute
+		glBindBuffer(GL_ARRAY_BUFFER, VNO);
+		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(3);
+
+		VAO = mVAO;
+	}
+	void setLighting() {
+		ambientColor.r = 1.0f;
+		ambientColor.g = 1.0f;
+		ambientColor.b = 1.0f;
+
+		lightDirection.x = 0.0f;
+		lightDirection.y = 0.0f;
+		lightDirection.z = 1.0f;
+
+		lightColor.x = 1.0f;
+		lightColor.y = 1.0f;
+		lightColor.z = 1.0f;
+
+		specularColor.x = 1.0f;
+		specularColor.y = 1.0f;
+		specularColor.z = 1.0f;
+	}
+	void setTexture(int wi, int he, float* pic) {
+		//glfwMakeContextCurrent(window);
+		glGenTextures(1, &tex);
+		glBindTexture(GL_TEXTURE_2D, tex);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wi, he, 0, GL_RGB, GL_FLOAT, pic);
+	}
+	GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path) {
+
+		// Create the shaders
+		GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+		GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+
+		// Read the Vertex Shader code from the file
+		std::string VertexShaderCode;
+		std::ifstream VertexShaderStream(vertex_file_path, std::ios::in);
+		if (VertexShaderStream.is_open()) {
+			std::stringstream sstr;
+			sstr << VertexShaderStream.rdbuf();
+			VertexShaderCode = sstr.str();
+			VertexShaderStream.close();
+		}
+		else {
+			printf("Impossible to open %s. Are you in the right directory ? Don't forget to read the FAQ !\n", vertex_file_path);
+			getchar();
+			return 0;
+		}
+
+		// Read the Fragment Shader code from the file
+		std::string FragmentShaderCode;
+		std::ifstream FragmentShaderStream(fragment_file_path, std::ios::in);
+		if (FragmentShaderStream.is_open()) {
+			std::stringstream sstr;
+			sstr << FragmentShaderStream.rdbuf();
+			FragmentShaderCode = sstr.str();
+			FragmentShaderStream.close();
+		}
+
+		GLint Result = GL_FALSE;
+		int InfoLogLength;
+
+		// Compile Vertex Shader
+		printf("Compiling shader : %s\n", vertex_file_path);
+		char const * VertexSourcePointer = VertexShaderCode.c_str();
+		glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
+		glCompileShader(VertexShaderID);
+
+		// Check Vertex Shader
+		glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
+		glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+		if (InfoLogLength > 0) {
+			std::vector<char> VertexShaderErrorMessage(InfoLogLength + 1);
+			glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
+			printf("%s\n", &VertexShaderErrorMessage[0]);
+		}
+
+		// Compile Fragment Shader
+		printf("Compiling shader : %s\n", fragment_file_path);
+		char const * FragmentSourcePointer = FragmentShaderCode.c_str();
+		glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
+		glCompileShader(FragmentShaderID);
+
+		// Check Fragment Shader
+		glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
+		glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+		if (InfoLogLength > 0) {
+			std::vector<char> FragmentShaderErrorMessage(InfoLogLength + 1);
+			glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
+			printf("%s\n", &FragmentShaderErrorMessage[0]);
+		}
+
+		// Link the program
+		printf("Linking program\n");
+		GLuint ProgramID = glCreateProgram();
+		glAttachShader(ProgramID, VertexShaderID);
+		glAttachShader(ProgramID, FragmentShaderID);
+		glLinkProgram(ProgramID);
+
+		// Check the program
+		glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
+		glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+		if (InfoLogLength > 0) {
+			std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
+			glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
+			printf("%s\n", &ProgramErrorMessage[0]);
+		}
+
+		glDetachShader(ProgramID, VertexShaderID);
+		glDetachShader(ProgramID, FragmentShaderID);
+
+		glDeleteShader(VertexShaderID);
+		glDeleteShader(FragmentShaderID);
+
+		return ProgramID;
+	}
+
+	void mainLoop() {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glUseProgram(programID);
+
+
+		glUniformMatrix4fv(MMMatrixID, 1, GL_FALSE, &Model[0][0]);
+		glUniformMatrix4fv(VMMatrixID, 1, GL_FALSE, &View[0][0]);
+		glUniformMatrix4fv(PVMatrixID, 1, GL_FALSE, &Projection[0][0]);
+
+		invTranspose = glm::transpose(glm::inverse(glm::mat3(Model)));
+		glUniformMatrix3fv(ITMatrixID, 1, GL_FALSE, &invTranspose[0][0]);
+
+
+
+		glBindTexture(GL_TEXTURE_2D, tex);
+
+		glBindVertexArray(VAO);
+
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+
+
+		glUniform1f(AmbientAmountID, ambientAmount);
+		glUniform3f(AmbientColorID, ambientColor.x, ambientColor.y, ambientColor.z);
+		glUniform1f(LightAmountID, lightAmount);
+		glUniform3f(LightColorID, lightColor.x, lightColor.y, lightColor.z);
+		glUniform3f(LightDirectionID, lightDirection.x, lightDirection.y, lightDirection.z);
+		glUniform3f(SpecularColorID,
+			specularColor.x,
+			specularColor.y,
+			specularColor.z);
+		glUniform3f(WorldSpaceCameraDirID,
+			cameraDirection.x,
+			cameraDirection.y,
+			cameraDirection.z);
+		glUniform1f(
+			ShininessID,
+			shininess
+		);
+		glUniform1f(
+			SpecularAmountID,
+			specularAmount
+		);
+
+	}
 };
-
-
-glm::vec3 lightDirection;
-glm::vec3 lightColor;
-float lightAmount = 1.0f;
-glm::vec3 ambientColor;
-float ambientAmount = 1.0f;
-glm::mat3 invTranspose;
-
-glm::vec3 worldSpaceCameraPos;
-glm::vec3 worldSpaceCameraTarget;
-float shininess = 10.0f;
-glm::vec3 specularColor;
-float specularAmount = 20.0f;
 
 double cursor_xpos, cursor_ypos;
 bool cursorLeftPressed = false;
@@ -171,128 +449,128 @@ void m_bucketToolTexture2(GLuint tex, float *texture, int width, int height) {
 	m_updateTexture(tex, texture, width, height);
 }
 
-GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path) {
+//GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path) {
+//
+//	// Create the shaders
+//	GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+//	GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+//
+//	// Read the Vertex Shader code from the file
+//	std::string VertexShaderCode;
+//	std::ifstream VertexShaderStream(vertex_file_path, std::ios::in);
+//	if (VertexShaderStream.is_open()) {
+//		std::stringstream sstr;
+//		sstr << VertexShaderStream.rdbuf();
+//		VertexShaderCode = sstr.str();
+//		VertexShaderStream.close();
+//	}
+//	else {
+//		printf("Impossible to open %s. Are you in the right directory ? Don't forget to read the FAQ !\n", vertex_file_path);
+//		getchar();
+//		return 0;
+//	}
+//
+//	// Read the Fragment Shader code from the file
+//	std::string FragmentShaderCode;
+//	std::ifstream FragmentShaderStream(fragment_file_path, std::ios::in);
+//	if (FragmentShaderStream.is_open()) {
+//		std::stringstream sstr;
+//		sstr << FragmentShaderStream.rdbuf();
+//		FragmentShaderCode = sstr.str();
+//		FragmentShaderStream.close();
+//	}
+//
+//	GLint Result = GL_FALSE;
+//	int InfoLogLength;
+//
+//	// Compile Vertex Shader
+//	printf("Compiling shader : %s\n", vertex_file_path);
+//	char const * VertexSourcePointer = VertexShaderCode.c_str();
+//	glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
+//	glCompileShader(VertexShaderID);
+//
+//	// Check Vertex Shader
+//	glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
+//	glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+//	if (InfoLogLength > 0) {
+//		std::vector<char> VertexShaderErrorMessage(InfoLogLength + 1);
+//		glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
+//		printf("%s\n", &VertexShaderErrorMessage[0]);
+//	}
+//
+//	// Compile Fragment Shader
+//	printf("Compiling shader : %s\n", fragment_file_path);
+//	char const * FragmentSourcePointer = FragmentShaderCode.c_str();
+//	glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
+//	glCompileShader(FragmentShaderID);
+//
+//	// Check Fragment Shader
+//	glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
+//	glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+//	if (InfoLogLength > 0) {
+//		std::vector<char> FragmentShaderErrorMessage(InfoLogLength + 1);
+//		glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
+//		printf("%s\n", &FragmentShaderErrorMessage[0]);
+//	}
+//
+//	// Link the program
+//	printf("Linking program\n");
+//	GLuint ProgramID = glCreateProgram();
+//	glAttachShader(ProgramID, VertexShaderID);
+//	glAttachShader(ProgramID, FragmentShaderID);
+//	glLinkProgram(ProgramID);
+//
+//	// Check the program
+//	glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
+//	glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+//	if (InfoLogLength > 0) {
+//		std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
+//		glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
+//		printf("%s\n", &ProgramErrorMessage[0]);
+//	}
+//
+//	glDetachShader(ProgramID, VertexShaderID);
+//	glDetachShader(ProgramID, FragmentShaderID);
+//
+//	glDeleteShader(VertexShaderID);
+//	glDeleteShader(FragmentShaderID);
+//
+//	return ProgramID;
+//}
 
-	// Create the shaders
-	GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-	GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-
-	// Read the Vertex Shader code from the file
-	std::string VertexShaderCode;
-	std::ifstream VertexShaderStream(vertex_file_path, std::ios::in);
-	if (VertexShaderStream.is_open()) {
-		std::stringstream sstr;
-		sstr << VertexShaderStream.rdbuf();
-		VertexShaderCode = sstr.str();
-		VertexShaderStream.close();
-	}
-	else {
-		printf("Impossible to open %s. Are you in the right directory ? Don't forget to read the FAQ !\n", vertex_file_path);
-		getchar();
-		return 0;
-	}
-
-	// Read the Fragment Shader code from the file
-	std::string FragmentShaderCode;
-	std::ifstream FragmentShaderStream(fragment_file_path, std::ios::in);
-	if (FragmentShaderStream.is_open()) {
-		std::stringstream sstr;
-		sstr << FragmentShaderStream.rdbuf();
-		FragmentShaderCode = sstr.str();
-		FragmentShaderStream.close();
-	}
-
-	GLint Result = GL_FALSE;
-	int InfoLogLength;
-
-	// Compile Vertex Shader
-	printf("Compiling shader : %s\n", vertex_file_path);
-	char const * VertexSourcePointer = VertexShaderCode.c_str();
-	glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
-	glCompileShader(VertexShaderID);
-
-	// Check Vertex Shader
-	glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
-	glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-	if (InfoLogLength > 0) {
-		std::vector<char> VertexShaderErrorMessage(InfoLogLength + 1);
-		glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
-		printf("%s\n", &VertexShaderErrorMessage[0]);
-	}
-
-	// Compile Fragment Shader
-	printf("Compiling shader : %s\n", fragment_file_path);
-	char const * FragmentSourcePointer = FragmentShaderCode.c_str();
-	glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
-	glCompileShader(FragmentShaderID);
-
-	// Check Fragment Shader
-	glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
-	glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-	if (InfoLogLength > 0) {
-		std::vector<char> FragmentShaderErrorMessage(InfoLogLength + 1);
-		glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
-		printf("%s\n", &FragmentShaderErrorMessage[0]);
-	}
-
-	// Link the program
-	printf("Linking program\n");
-	GLuint ProgramID = glCreateProgram();
-	glAttachShader(ProgramID, VertexShaderID);
-	glAttachShader(ProgramID, FragmentShaderID);
-	glLinkProgram(ProgramID);
-
-	// Check the program
-	glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
-	glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-	if (InfoLogLength > 0) {
-		std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
-		glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
-		printf("%s\n", &ProgramErrorMessage[0]);
-	}
-
-	glDetachShader(ProgramID, VertexShaderID);
-	glDetachShader(ProgramID, FragmentShaderID);
-
-	glDeleteShader(VertexShaderID);
-	glDeleteShader(FragmentShaderID);
-
-	return ProgramID;
-}
-
-GLFWwindow* InitWindow()
-{
-	if (!glfwInit())
-	{
-		fprintf(stderr, "GLFW failed!\n");
-		return NULL;
-	}
-
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-
-	GLFWwindow* window = NULL;
-	window = glfwCreateWindow(724, 724, "Testiprojekti", NULL, NULL);
-	if (window == NULL) {
-		fprintf(stderr, "Failed to open GLFW window.\n");
-		glfwTerminate();
-		return NULL;
-	}
-
-	glfwMakeContextCurrent(window);
-
-	if (glewInit() != GLEW_OK) {
-		fprintf(stderr, "Failed to initialize GLEW\n");
-		getchar();
-		glfwTerminate();
-		return NULL;
-	}
-
-	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-	return window;
-}
+//GLFWwindow* InitWindow()
+//{
+//	if (!glfwInit())
+//	{
+//		fprintf(stderr, "GLFW failed!\n");
+//		return NULL;
+//	}
+//
+//	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+//	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+//	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+//	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+//
+//	GLFWwindow* window = NULL;
+//	window = glfwCreateWindow(724, 724, "Testiprojekti", NULL, NULL);
+//	if (window == NULL) {
+//		fprintf(stderr, "Failed to open GLFW window.\n");
+//		glfwTerminate();
+//		return NULL;
+//	}
+//
+//	glfwMakeContextCurrent(window);
+//
+//	if (glewInit() != GLEW_OK) {
+//		fprintf(stderr, "Failed to initialize GLEW\n");
+//		getchar();
+//		glfwTerminate();
+//		return NULL;
+//	}
+//
+//	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+//	return window;
+//}
 
 void m_genOneColorTex(int width, int height, float *texture, float r, float g, float b) {
 	int index = -1;
@@ -754,12 +1032,10 @@ GLuint setVAO() {
 int main()
 {
 	srand(time(NULL));
-	GLFWwindow* window = InitWindow();
+	My_window* window = new My_window();
 	My_window* w2 = new My_window();
-	GLFWwindow* currentWindow = w2->window;
-	glClearColor(0.1f, 0.5f, 0.7f, 1.0f);
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
+	glfwMakeContextCurrent(window->window);
+	My_window* currentWindow = window;
 
 	const int wi = 700, he = 700;
 
@@ -795,150 +1071,35 @@ int main()
 	//m_drawLine(f.c0.x, f.c0.y, f.c1.x, f.c1.y, pic, wi, he);
 	m_saveAsPNG("kuva.png", wi, he, pic, "k");
 
-	GLuint VAO = setVAO();
+	window->setTexture(wi, he, pic);
+	glfwMakeContextCurrent(w2->window);
+	w2->setTexture(wi, he, pic2);
+	glfwMakeContextCurrent(window->window);
 
-	GLuint tex;
-	glGenTextures(1, &tex);
-	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wi, he, 0, GL_RGB, GL_FLOAT, pic);
-
-	GLuint programID = LoadShaders("VertexShader.vertexshader", "FragmentShader.fragmentshader");
-
-
-	GLuint MMMatrixID = glGetUniformLocation(programID, "MM");
-	GLuint VMMatrixID = glGetUniformLocation(programID, "VM");
-	GLuint PVMatrixID = glGetUniformLocation(programID, "PV");
-	GLuint AmbientAmountID = glGetUniformLocation(programID, "AmbientAmount");
-	GLuint AmbientColorID = glGetUniformLocation(programID, "AmbientColor");
-	GLuint LightAmountID = glGetUniformLocation(programID, "LightAmount");
-	GLuint LightColorID = glGetUniformLocation(programID, "LightColor");
-	GLuint LightDirectionID = glGetUniformLocation(programID, "LightDirection");
-	GLuint ITMatrixID = glGetUniformLocation(programID, "IT");
-
-	GLuint SpecularAmountID = glGetUniformLocation(programID, "SpecularAmount");
-	GLuint SpecularColorID = glGetUniformLocation(programID, "SpecularColor");
-	GLuint WorldSpaceCameraDirID = glGetUniformLocation(programID, "WorldSpaceCameraDir");
-	GLuint ShininessID = glGetUniformLocation(programID, "Shininess");
-
-
-	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 4.0f / 4.0f, 0.1f, 100.0f);
-
-	worldSpaceCameraPos.x = 0.0f;
-	worldSpaceCameraPos.y = 0.0f;
-	worldSpaceCameraPos.z = -2.4250f;
-	worldSpaceCameraTarget.x = 0.0f;
-	worldSpaceCameraTarget.y = 0.0f;
-	worldSpaceCameraTarget.z = 1.0f;
-
-	glm::mat4 View = glm::lookAt(
-		worldSpaceCameraPos,
-		worldSpaceCameraTarget,
-		glm::vec3(1, 0, 0)
-	);
-
-	glm::mat4 Model = glm::mat4(3.0f);
-
-	/* MVP Matrices Debug
-	for (int i = 0; i < Projection.length(); ++i) {
-		std::cout << Projection[i].r << " " << Projection[i].g << " " << Projection[i].b << " " << Projection[i].a << "\n";
-	}
-	std::cout << "\n";
-
-	for (int i = 0; i < Model.length(); ++i) {
-		std::cout << View[i].r << " " << View[i].g << " " << View[i].b << " " << View[i].a <<"\n";
-	}
-	std::cout << "\n";
-
-	for (int i = 0; i < Model.length(); ++i) {
-		std::cout << Model[i].r << " " << Model[i].g << " " << Model[i].b << " " << Model[i].a << "\n";
-	}*/
-
-	ambientColor.r = 1.0f;
-	ambientColor.g = 1.0f;
-	ambientColor.b = 1.0f;
-
-	lightDirection.x = 0.0f;
-	lightDirection.y = 0.0f;
-	lightDirection.z = 1.0f;
-
-	lightColor.x = 1.0f;
-	lightColor.y = 1.0f;
-	lightColor.z = 1.0f;
-
-	specularColor.x = 1.0f;
-	specularColor.y = 1.0f;
-	specularColor.z = 1.0f;
-
-	glm::vec3 cameraDirection = glm::normalize(worldSpaceCameraPos - worldSpaceCameraTarget);
-
-
-	glfwSetMouseButtonCallback(window, mouse_button_callback);
+	glfwSetMouseButtonCallback(window->window, mouse_button_callback);
 	glfwSetMouseButtonCallback(w2->window, mouse_button_callback);
 
 	do {
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		currentWindow->mainLoop();
 
-		glUseProgram(programID);
-
-
-		glUniformMatrix4fv(MMMatrixID, 1, GL_FALSE, &Model[0][0]);
-		glUniformMatrix4fv(VMMatrixID, 1, GL_FALSE, &View[0][0]);
-		glUniformMatrix4fv(PVMatrixID, 1, GL_FALSE, &Projection[0][0]);
-
-		invTranspose = glm::transpose(glm::inverse(glm::mat3(Model)));
-		glUniformMatrix3fv(ITMatrixID, 1, GL_FALSE, &invTranspose[0][0]);
-
-
-
-		glBindTexture(GL_TEXTURE_2D, tex);
-
-		glBindVertexArray(VAO);
-
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-
-
-		glUniform1f(AmbientAmountID, ambientAmount);
-		glUniform3f(AmbientColorID, ambientColor.x, ambientColor.y, ambientColor.z);
-		glUniform1f(LightAmountID, lightAmount);
-		glUniform3f(LightColorID, lightColor.x, lightColor.y, lightColor.z);
-		glUniform3f(LightDirectionID, lightDirection.x, lightDirection.y, lightDirection.z);
-		glUniform3f(SpecularColorID,
-			specularColor.x,
-			specularColor.y,
-			specularColor.z);
-		glUniform3f(WorldSpaceCameraDirID,
-			cameraDirection.x,
-			cameraDirection.y,
-			cameraDirection.z);
-		glUniform1f(
-			ShininessID,
-			shininess
-		);
-		glUniform1f(
-			SpecularAmountID,
-			specularAmount
-		);
-
-
-
-		glfwSwapBuffers(currentWindow);
+		glfwSwapBuffers(currentWindow->window);
 		glfwPollEvents();
 		if (cursorLeftPressed) {
-			//glfwMakeContextCurrent(window);
-			glfwGetCursorPos(window, &cursor_xpos, &cursor_ypos);
-			m_drawToTexture(tex, pic, wi, he);
+			currentWindow = w2;
+			glfwMakeContextCurrent(currentWindow->window);
+			glfwFocusWindow(currentWindow->window);
+			/*glfwGetCursorPos(currentWindow->window, &cursor_xpos, &cursor_ypos);
+			m_drawToTexture(currentWindow->tex, pic, wi, he);*/
 		}
 		if (cursorRightPressed) {
-			glfwGetCursorPos(window, &cursor_xpos, &cursor_ypos);
-			m_bucketToolTexture2(tex, pic, wi, he);
+			currentWindow = window;
+			glfwMakeContextCurrent(currentWindow->window);
+			glfwFocusWindow(currentWindow->window);
+			/*glfwGetCursorPos(currentWindow->window, &cursor_xpos, &cursor_ypos);
+			m_bucketToolTexture2(currentWindow->tex, pic, wi, he);*/
+			
 		}
-	} while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(currentWindow) == 0);
+	} while (glfwGetKey(currentWindow->window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(currentWindow->window) == 0);
 
 	glfwTerminate();
 }
