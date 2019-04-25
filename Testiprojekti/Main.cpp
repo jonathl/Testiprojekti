@@ -10,14 +10,16 @@
 #include <string.h>
 #include <sstream>
 #include <math.h>
-#include <vector>
 #include <time.h>
 #include <ctime>
 #include <malloc.h>
+#include <list>
+
 #include <GL\glew.h>
 #include <GLFW\glfw3.h>
 #include <glm\glm.hpp>
 #include <glm\gtc\matrix_transform.hpp>
+
 #include "Noise.h"
 #include "3D_object.h"
 
@@ -25,6 +27,10 @@
 #include <zlib.h>
 
 using namespace glm;
+
+void window_focus_callback(GLFWwindow* window, int focused);
+void window_close_callback(GLFWwindow* window);
+
 
 class My_window {
 public:
@@ -74,6 +80,8 @@ public:
 		glClearColor(0.1f, 0.5f, 0.7f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
+		glfwSetWindowFocusCallback(window, window_focus_callback);
+		glfwSetWindowCloseCallback(window, window_close_callback);
 		setVAO();
 		setMVP();
 		setProgram();
@@ -370,6 +378,10 @@ public:
 			SpecularAmountID,
 			specularAmount
 		);
+		glfwSwapBuffers(window);
+	}
+
+	void closeWindow() {
 
 	}
 };
@@ -377,7 +389,46 @@ public:
 double cursor_xpos, cursor_ypos;
 bool cursorLeftPressed = false;
 bool cursorRightPressed = false;
+My_window* currentWindow;
+std::vector<My_window*> windows;
 
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+		cursorRightPressed = true;
+	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
+		cursorRightPressed = false;
+	}
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		cursorLeftPressed = true;
+	}
+	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+		cursorLeftPressed = false;
+	}
+}
+
+void window_focus_callback(GLFWwindow* window, int focused) {
+	if (focused) {
+		//currentWindow->window = window; //älä vaan vaihda currentwindowin windowii
+		for (int i = 0; i < windows.size(); ++i) {
+			if (windows[i]->window == window) {
+				currentWindow = windows[i];
+				glfwMakeContextCurrent(currentWindow->window);
+			}
+		}
+	}
+}
+
+void window_close_callback(GLFWwindow* window) {
+	for (int i = 0; i < windows.size(); ++i) {
+		if (windows[i]->window == window) {
+			delete windows[i];
+			windows.erase(windows.begin() +i);
+		}
+	}
+	std::cout << windows.size();
+	glfwDestroyWindow(window);
+}
 
 int m_getTextureCoordinate(int width, int height, int x, int y) {
 	int textcoord = width * (height-y) - x;
@@ -768,20 +819,6 @@ void m_addContrast(float *texture, float str, float displacement, int width, int
 //	}
 //}
 
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
-{
-	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
-		cursorRightPressed = true;
-	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
-		cursorRightPressed = false;
-	}
-	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-		cursorLeftPressed = true;
-	}
-	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
-		cursorLeftPressed = false;
-	}
-}
 
 void write_row_callback(png_structp png_ptr, png_uint_32 row, int pass){
 	//std::cout << row <<"\n";
@@ -1029,13 +1066,21 @@ GLuint setVAO() {
 	return VAO;
 }
 
+void m_newWindow() {
+	windows.push_back(new My_window());
+	currentWindow = windows.back();
+	glfwMakeContextCurrent(windows.back()->window);
+}
+
 int main()
 {
 	srand(time(NULL));
 	My_window* window = new My_window();
 	My_window* w2 = new My_window();
+	windows.push_back(window);
+	windows.push_back(w2);
 	glfwMakeContextCurrent(window->window);
-	My_window* currentWindow = window;
+	currentWindow = window;
 
 	const int wi = 700, he = 700;
 
@@ -1076,30 +1121,34 @@ int main()
 	w2->setTexture(wi, he, pic2);
 	glfwMakeContextCurrent(window->window);
 
-	glfwSetMouseButtonCallback(window->window, mouse_button_callback);
+	glfwSetMouseButtonCallback(window->window, mouse_button_callback); //kato nää läpi
 	glfwSetMouseButtonCallback(w2->window, mouse_button_callback);
+	bool keyspressed = false; 
 
 	do {
-		currentWindow->mainLoop();
+		currentWindow->mainLoop(); // windows[i]->mainloop();
 
-		glfwSwapBuffers(currentWindow->window);
 		glfwPollEvents();
+
+		if (glfwGetKey(currentWindow->window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS && glfwGetKey(currentWindow->window, GLFW_KEY_N) == GLFW_PRESS && !keyspressed) {
+			std::cout << "cntr + n \n"; //luo jostain syystä extra ikkunan kun klikkaa toista ikkunaa (tän lisäks se kaatuu usein kun sulkee ikkunoita)
+			m_newWindow();
+			keyspressed = true;
+		}
+		else if (glfwGetKey(currentWindow->window, GLFW_KEY_LEFT_CONTROL) != GLFW_PRESS || glfwGetKey(currentWindow->window, GLFW_KEY_N) != GLFW_PRESS) {
+			keyspressed = false; //tän varmaan voi tehdä paremmin
+		}
+
 		if (cursorLeftPressed) {
-			currentWindow = w2;
-			glfwMakeContextCurrent(currentWindow->window);
-			glfwFocusWindow(currentWindow->window);
 			/*glfwGetCursorPos(currentWindow->window, &cursor_xpos, &cursor_ypos);
 			m_drawToTexture(currentWindow->tex, pic, wi, he);*/
 		}
 		if (cursorRightPressed) {
-			currentWindow = window;
-			glfwMakeContextCurrent(currentWindow->window);
-			glfwFocusWindow(currentWindow->window);
 			/*glfwGetCursorPos(currentWindow->window, &cursor_xpos, &cursor_ypos);
 			m_bucketToolTexture2(currentWindow->tex, pic, wi, he);*/
 			
 		}
-	} while (glfwGetKey(currentWindow->window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(currentWindow->window) == 0);
+	} while (glfwGetKey(currentWindow->window, GLFW_KEY_ESCAPE) != GLFW_PRESS || windows.size() == 0);// && glfwWindowShouldClose(currentWindow->window) == 0);
 
 	glfwTerminate();
 }
