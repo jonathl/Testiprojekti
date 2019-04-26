@@ -30,10 +30,18 @@ using namespace glm;
 
 void window_focus_callback(GLFWwindow* window, int focused);
 void window_close_callback(GLFWwindow* window);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+
+void m_newWindow();
 
 
 class My_window {
 public:
+	char* name;
+
+	#pragma region tyhmiiMuuttujii
+
 
 	glm::vec3 lightDirection;
 	glm::vec3 lightColor;
@@ -72,14 +80,21 @@ public:
 
 	GLFWwindow* window;
 	GLuint VAO;
+#pragma endregion
 	
+	float* texture;
+	int textureWidth;
+	int textureHeight;
 	GLuint tex;
 
-	My_window() {
+	My_window(char* n) {
+		name = n;
 		window = InitWindow();
 		glClearColor(0.1f, 0.5f, 0.7f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
+		glfwSetKeyCallback(window, key_callback);
+		glfwSetMouseButtonCallback(window, mouse_button_callback);
 		glfwSetWindowFocusCallback(window, window_focus_callback);
 		glfwSetWindowCloseCallback(window, window_close_callback);
 		setVAO();
@@ -88,42 +103,6 @@ public:
 		setLighting();
 	}
 
-	void setProgram() {
-		programID = LoadShaders("VertexShader.vertexshader", "FragmentShader.fragmentshader");
-		MMMatrixID = glGetUniformLocation(programID, "MM");
-		VMMatrixID = glGetUniformLocation(programID, "VM");
-		PVMatrixID = glGetUniformLocation(programID, "PV");
-		AmbientAmountID = glGetUniformLocation(programID, "AmbientAmount");
-		AmbientColorID = glGetUniformLocation(programID, "AmbientColor");
-		LightAmountID = glGetUniformLocation(programID, "LightAmount");
-		LightColorID = glGetUniformLocation(programID, "LightColor");
-		LightDirectionID = glGetUniformLocation(programID, "LightDirection");
-		ITMatrixID = glGetUniformLocation(programID, "IT");
-
-		SpecularAmountID = glGetUniformLocation(programID, "SpecularAmount");
-		SpecularColorID = glGetUniformLocation(programID, "SpecularColor");
-		WorldSpaceCameraDirID = glGetUniformLocation(programID, "WorldSpaceCameraDir");
-		ShininessID = glGetUniformLocation(programID, "Shininess");
-
-	}
-	void setMVP() {
-		Projection = glm::perspective(glm::radians(45.0f), 4.0f / 4.0f, 0.1f, 100.0f);
-
-		worldSpaceCameraPos.x = 0.0f;
-		worldSpaceCameraPos.y = 0.0f;
-		worldSpaceCameraPos.z = -2.4250f; //2
-		worldSpaceCameraTarget.x = 0.0f;
-		worldSpaceCameraTarget.y = 0.0f;
-		worldSpaceCameraTarget.z = 1.0f;
-
-		View = glm::lookAt(
-			worldSpaceCameraPos,
-			worldSpaceCameraTarget,
-			glm::vec3(1, 0, 0)
-		);
-
-		Model = glm::mat4(3.0f);
-	}
 	GLFWwindow* InitWindow()
 	{
 		if (!glfwInit())
@@ -156,6 +135,24 @@ public:
 
 		glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 		return window;
+	}
+	void setProgram() {
+		programID = LoadShaders("VertexShader.vertexshader", "FragmentShader.fragmentshader");
+		MMMatrixID = glGetUniformLocation(programID, "MM");
+		VMMatrixID = glGetUniformLocation(programID, "VM");
+		PVMatrixID = glGetUniformLocation(programID, "PV");
+		AmbientAmountID = glGetUniformLocation(programID, "AmbientAmount");
+		AmbientColorID = glGetUniformLocation(programID, "AmbientColor");
+		LightAmountID = glGetUniformLocation(programID, "LightAmount");
+		LightColorID = glGetUniformLocation(programID, "LightColor");
+		LightDirectionID = glGetUniformLocation(programID, "LightDirection");
+		ITMatrixID = glGetUniformLocation(programID, "IT");
+
+		SpecularAmountID = glGetUniformLocation(programID, "SpecularAmount");
+		SpecularColorID = glGetUniformLocation(programID, "SpecularColor");
+		WorldSpaceCameraDirID = glGetUniformLocation(programID, "WorldSpaceCameraDir");
+		ShininessID = glGetUniformLocation(programID, "Shininess");
+
 	}
 	void setVAO() {
 		glfwMakeContextCurrent(window);
@@ -217,6 +214,24 @@ public:
 
 		VAO = mVAO;
 	}
+	void setMVP() {
+		Projection = glm::perspective(glm::radians(45.0f), 4.0f / 4.0f, 0.1f, 100.0f);
+
+		worldSpaceCameraPos.x = 0.0f;
+		worldSpaceCameraPos.y = 0.0f;
+		worldSpaceCameraPos.z = -2.4250f; //2
+		worldSpaceCameraTarget.x = 0.0f;
+		worldSpaceCameraTarget.y = 0.0f;
+		worldSpaceCameraTarget.z = 1.0f;
+
+		View = glm::lookAt(
+			worldSpaceCameraPos,
+			worldSpaceCameraTarget,
+			glm::vec3(1, 0, 0)
+		);
+
+		Model = glm::mat4(3.0f);
+	}
 	void setLighting() {
 		ambientColor.r = 1.0f;
 		ambientColor.g = 1.0f;
@@ -235,7 +250,10 @@ public:
 		specularColor.z = 1.0f;
 	}
 	void setTexture(int wi, int he, float* pic) {
-		//glfwMakeContextCurrent(window);
+		texture = pic;
+		textureWidth = wi;
+		textureHeight = he;
+		glfwMakeContextCurrent(window);
 		glGenTextures(1, &tex);
 		glBindTexture(GL_TEXTURE_2D, tex);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -391,6 +409,8 @@ bool cursorLeftPressed = false;
 bool cursorRightPressed = false;
 My_window* currentWindow;
 std::vector<My_window*> windows;
+bool closeProgram = false;
+bool ctrlDown = false;
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
@@ -404,6 +424,33 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 	}
 	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
 		cursorLeftPressed = false;
+	}
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_E && action == GLFW_PRESS) {
+		for (int i = 0; i < windows.size(); ++i) {
+			if (windows[i]->window == window) {
+				std::cout << windows[i]->name;
+			}
+		}
+	}
+
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+		closeProgram = true;
+	}
+	if (key == GLFW_KEY_N && action == GLFW_PRESS && ctrlDown) {
+		m_newWindow();
+	}
+	if (key == GLFW_KEY_W && action == GLFW_PRESS && ctrlDown) {
+		window_close_callback(currentWindow->window);
+	}
+	if (key == GLFW_KEY_LEFT_CONTROL && action == GLFW_PRESS) {
+		ctrlDown = true;
+	}
+	if (key == GLFW_KEY_LEFT_CONTROL && action == GLFW_RELEASE) {
+		ctrlDown = false;
 	}
 }
 
@@ -425,6 +472,12 @@ void window_close_callback(GLFWwindow* window) {
 			delete windows[i];
 			windows.erase(windows.begin() +i);
 		}
+	}
+	if (windows.size() != 0) {
+		glfwFocusWindow(windows[0]->window);
+	}
+	else {
+		currentWindow = NULL;
 	}
 	std::cout << windows.size();
 	glfwDestroyWindow(window);
@@ -1067,7 +1120,9 @@ GLuint setVAO() {
 }
 
 void m_newWindow() {
-	windows.push_back(new My_window());
+	char* n = "window";
+	n += 'w';
+	windows.push_back(new My_window(n));
 	currentWindow = windows.back();
 	glfwMakeContextCurrent(windows.back()->window);
 }
@@ -1075,8 +1130,8 @@ void m_newWindow() {
 int main()
 {
 	srand(time(NULL));
-	My_window* window = new My_window();
-	My_window* w2 = new My_window();
+	My_window* window = new My_window("window1");
+	My_window* w2 = new My_window("window2");
 	windows.push_back(window);
 	windows.push_back(w2);
 	glfwMakeContextCurrent(window->window);
@@ -1117,38 +1172,26 @@ int main()
 	m_saveAsPNG("kuva.png", wi, he, pic, "k");
 
 	window->setTexture(wi, he, pic);
-	glfwMakeContextCurrent(w2->window);
 	w2->setTexture(wi, he, pic2);
-	glfwMakeContextCurrent(window->window);
-
-	glfwSetMouseButtonCallback(window->window, mouse_button_callback); //kato nää läpi
-	glfwSetMouseButtonCallback(w2->window, mouse_button_callback);
-	bool keyspressed = false; 
 
 	do {
 		currentWindow->mainLoop(); // windows[i]->mainloop();
 
 		glfwPollEvents();
 
-		if (glfwGetKey(currentWindow->window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS && glfwGetKey(currentWindow->window, GLFW_KEY_N) == GLFW_PRESS && !keyspressed) {
-			std::cout << "cntr + n \n"; //luo jostain syystä extra ikkunan kun klikkaa toista ikkunaa (tän lisäks se kaatuu usein kun sulkee ikkunoita)
-			m_newWindow();
-			keyspressed = true;
-		}
-		else if (glfwGetKey(currentWindow->window, GLFW_KEY_LEFT_CONTROL) != GLFW_PRESS || glfwGetKey(currentWindow->window, GLFW_KEY_N) != GLFW_PRESS) {
-			keyspressed = false; //tän varmaan voi tehdä paremmin
-		}
+		if (currentWindow != NULL) {
 
-		if (cursorLeftPressed) {
-			/*glfwGetCursorPos(currentWindow->window, &cursor_xpos, &cursor_ypos);
-			m_drawToTexture(currentWindow->tex, pic, wi, he);*/
-		}
-		if (cursorRightPressed) {
-			/*glfwGetCursorPos(currentWindow->window, &cursor_xpos, &cursor_ypos);
-			m_bucketToolTexture2(currentWindow->tex, pic, wi, he);*/
+			if (cursorLeftPressed) {
+				/*glfwGetCursorPos(currentWindow->window, &cursor_xpos, &cursor_ypos);
+				m_drawToTexture(currentWindow->tex, pic, wi, he);*/
+			}
+			if (cursorRightPressed) {
+				/*glfwGetCursorPos(currentWindow->window, &cursor_xpos, &cursor_ypos);
+				m_bucketToolTexture2(currentWindow->tex, pic, wi, he);*/
+			}
 			
 		}
-	} while (glfwGetKey(currentWindow->window, GLFW_KEY_ESCAPE) != GLFW_PRESS || windows.size() == 0);// && glfwWindowShouldClose(currentWindow->window) == 0);
+	} while (windows.size() != 0 && !closeProgram);// && glfwWindowShouldClose(currentWindow->window) == 0);
 
 	glfwTerminate();
 }
