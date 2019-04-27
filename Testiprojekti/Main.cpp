@@ -34,6 +34,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
 void m_newWindow();
+void m_combinePictures(float *pic1, float *pic2, float *texture, float str, int width, int height);
+void m_saveAsPNG(char* file_name, int width, int height, float *buffer, char* title);
 
 
 class My_window {
@@ -82,7 +84,7 @@ public:
 	GLuint VAO;
 #pragma endregion
 	
-	float* texture;
+	float* texture = NULL;
 	int textureWidth;
 	int textureHeight;
 	GLuint tex;
@@ -408,9 +410,11 @@ double cursor_xpos, cursor_ypos;
 bool cursorLeftPressed = false;
 bool cursorRightPressed = false;
 My_window* currentWindow;
+My_window* previousWindow;
 std::vector<My_window*> windows;
 bool closeProgram = false;
 bool ctrlDown = false;
+bool lineMode = false;
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
@@ -429,10 +433,58 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if (key == GLFW_KEY_E && action == GLFW_PRESS) {
+	if (key == GLFW_KEY_L && action == GLFW_PRESS) {
 		for (int i = 0; i < windows.size(); ++i) {
 			if (windows[i]->window == window) {
 				std::cout << windows[i]->name;
+				break;
+			}
+		}
+	}
+
+	if (key == GLFW_KEY_C && action == GLFW_PRESS) {
+		if (previousWindow != NULL) {
+			My_window* p = previousWindow;
+			My_window* c = currentWindow;
+			m_newWindow();
+			windows.back()->texture = new float[c->textureWidth * c->textureHeight * 3];
+			m_combinePictures(c->texture, p->texture, windows.back()->texture, 0.5f, c->textureWidth, c->textureHeight);
+			windows.back()->setTexture(c->textureWidth, c->textureHeight, windows.back()->texture);
+		}
+	}
+
+	if (key == GLFW_KEY_P && action == GLFW_PRESS) {
+		for (int i = 0; i < windows.size(); ++i) {
+			if (windows[i]->window == window) {
+				int wi = windows[i]->textureWidth;
+				int he = windows[i]->textureHeight;
+				if (windows[i]->texture == NULL) {
+					wi = 700;
+					he = 700;
+					windows[i]->texture = new float[wi*he * 3];
+				}
+				PerlinNoise pn(wi, he, 6);
+				pn.m_genPerlinNoise(windows[i]->texture, 3);
+				windows[i]->setTexture(wi, he, windows[i]->texture);
+				break;
+			}
+		}
+	}
+
+	if (key == GLFW_KEY_O && action == GLFW_PRESS) {
+		for (int i = 0; i < windows.size(); ++i) {
+			if (windows[i]->window == window) {
+				int wi = windows[i]->textureWidth;
+				int he = windows[i]->textureHeight;
+				if (windows[i]->texture == NULL) {
+					wi = 700;
+					he = 700;
+					windows[i]->texture = new float[wi*he * 3];
+				}
+				WorleyNoise pn(wi, he, 8, 6);
+				pn.m_genWorleyNoise(windows[i]->texture, 3);
+				windows[i]->setTexture(wi, he, windows[i]->texture);
+				break;
 			}
 		}
 	}
@@ -456,9 +508,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 void window_focus_callback(GLFWwindow* window, int focused) {
 	if (focused) {
-		//currentWindow->window = window; //älä vaan vaihda currentwindowin windowii
 		for (int i = 0; i < windows.size(); ++i) {
 			if (windows[i]->window == window) {
+				previousWindow = currentWindow;
 				currentWindow = windows[i];
 				glfwMakeContextCurrent(currentWindow->window);
 			}
@@ -479,7 +531,6 @@ void window_close_callback(GLFWwindow* window) {
 	else {
 		currentWindow = NULL;
 	}
-	std::cout << windows.size();
 	glfwDestroyWindow(window);
 }
 
@@ -1123,6 +1174,7 @@ void m_newWindow() {
 	char* n = "window";
 	n += 'w';
 	windows.push_back(new My_window(n));
+	previousWindow = currentWindow;
 	currentWindow = windows.back();
 	glfwMakeContextCurrent(windows.back()->window);
 }
@@ -1155,10 +1207,11 @@ int main()
 	m_saveAsPNG("worley.png", wi, he, pic2, "k");
 	m_combinePictures(pic, pic2, pic, 0.4f, wi, he);
 
-	//m_genOneColorTex(wi, he, pic, 0.7f, 0.7f, 0.9f);
+	m_genOneColorTex(wi, he, pic, 0.7f, 0.7f, 0.9f);
 	//m_drawGridOnTex(wi, he, 125, pic);
-	//FractalLine f(200, 200, 500, 200);
-	//f.addLine(500, 500);
+	FractalLine f(200, 200, 500, 200);
+	f.addLine(500, 500);
+	f.addLine(200, 500);
 	//int2 coor[] = { int2(200,500) };
 	//f.addLines(coor, 1);
 	//f.closeLines();
@@ -1167,7 +1220,7 @@ int main()
 	//	f.iterFractal();
 	//}
 	////f.printPoints();
-	//m_drawFractal(f, pic, wi, he);
+	m_drawFractal(f, pic, wi, he);
 	//m_drawLine(f.c0.x, f.c0.y, f.c1.x, f.c1.y, pic, wi, he);
 	m_saveAsPNG("kuva.png", wi, he, pic, "k");
 

@@ -311,7 +311,9 @@ public:
 	}
 
 	void addLine(int x, int y) {
-		fl.push_back(new FractalLine(c0, c1));
+		if (fl.empty()) {
+			fl.push_back(new FractalLine(c0, c1));
+		}
 		fl.push_back(new FractalLine(c1, int2(x, y)));
 		c1 = int2(x, y);
 	}
