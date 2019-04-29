@@ -37,10 +37,13 @@ void m_newWindow();
 void m_combinePictures(float *pic1, float *pic2, float *texture, float str, int width, int height);
 void m_saveAsPNG(char* file_name, int width, int height, float *buffer, char* title);
 
+void m_genPlane(int x, int y, float* verts, unsigned int* indices, float* texcoord, float* normals);
+
 
 class My_window {
 public:
 	char* name;
+	int indicesSize;
 
 	#pragma region tyhmiiMuuttujii
 
@@ -158,56 +161,78 @@ public:
 	}
 	void setVAO() {
 		glfwMakeContextCurrent(window);
-		float vertices[] = {
-			//  Position      Color             Texcoords
-			-1.0f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Top-left
-			1.0f,  1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, // Top-right
-			-1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom-left
-			1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f  // Bottom-right
-		};
+		
+		int x = 10;
+		int y = 10;
+		int size = (x + 1) * (y + 1);
+		float* texcoord = new float[size * 2];
+		float* normals = new float[size * 3];
+		float* vertices = new float[size * 3];
+		unsigned int* indices = new unsigned int[x * y * 2 * 3];
+		indicesSize = x * y * 2 * 3;
+		m_genPlane(x, y, vertices, indices, texcoord, normals);
 
-		float normals[] = {
-			0.0f, 0.0f, -1.0f, // Top-left
-			0.0f, 0.0f, -1.0f, // Top-right
-			0.0f, 0.0f, -1.0f, // Bottom-right
-			0.0f, 0.0f, -1.0f // Bottom-left
-		};
+		//float vertices[] = {
+		//	//  Position              Texcoords
+		//	-1.0f,  1.0f, 0.0f, // Top-left
+		//	1.0f,  1.0f, 0.0f, // Top-right
+		//	-1.0f, -1.0f, 0.0f, // Bottom-left
+		//	1.0f, -1.0f, 0.0f  // Bottom-right
+		//};
 
-		//-1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Top-left
-		//	1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, // Top-right
-		//	-1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom-right
-		//	1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f  // Bottom-left
 
-		unsigned int indices[] = {
-			0, 1, 2, // first triangle
-			1, 2, 3  // second triangle
-		};
+		//float texcoord[] = {
+		//	0.0f, 1.0f,
+		//	1.0f, 1.0f,
+		//	0.0f, 0.0f,
+		//	1.0f, 0.0f
+		//};
 
-		unsigned int VNO, VBO, mVAO, EBO;
+		//float normals[] = {
+		//	0.0f, 0.0f, -1.0f, // Top-left
+		//	0.0f, 0.0f, -1.0f, // Top-right
+		//	0.0f, 0.0f, -1.0f, // Bottom-right
+		//	0.0f, 0.0f, -1.0f // Bottom-left
+		//};
+
+		////-1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Top-left
+		////	1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, // Top-right
+		////	-1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom-right
+		////	1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f  // Bottom-left
+
+		//unsigned int indices[] = {
+		//	0, 1, 2, // first triangle
+		//	1, 2, 3  // second triangle
+		//};
+
+		unsigned int VNO, VBO, mVAO, EBO, VTC;
 		glGenVertexArrays(1, &mVAO);
 		glGenBuffers(1, &VNO);
 		glGenBuffers(1, &VBO);
 		glGenBuffers(1, &EBO);
+		glGenBuffers(1, &VTC);
 
 		glBindVertexArray(mVAO);
 
 		glBindBuffer(GL_ARRAY_BUFFER, VNO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * size * 3, normals, GL_STATIC_DRAW);
 
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * size * 3, vertices, GL_STATIC_DRAW);
+
+		glBindBuffer(GL_ARRAY_BUFFER, VTC);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * size * 2, texcoord, GL_STATIC_DRAW);
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * x * y * 2 * 3, indices, GL_STATIC_DRAW);
 
 		// position attribute
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(0);
-		// color attribute
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(2 * sizeof(float)));
-		glEnableVertexAttribArray(1);
 		// texture coord attribute
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+		glBindBuffer(GL_ARRAY_BUFFER, VTC);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(2);
 		// normal attribute
 		glBindBuffer(GL_ARRAY_BUFFER, VNO);
@@ -216,14 +241,15 @@ public:
 
 		VAO = mVAO;
 	}
+
 	void setMVP() {
 		Projection = glm::perspective(glm::radians(45.0f), 4.0f / 4.0f, 0.1f, 100.0f);
 
-		worldSpaceCameraPos.x = 0.0f;
-		worldSpaceCameraPos.y = 0.0f;
-		worldSpaceCameraPos.z = -2.4250f; //2
-		worldSpaceCameraTarget.x = 0.0f;
-		worldSpaceCameraTarget.y = 0.0f;
+		worldSpaceCameraPos.x = 0.5f;
+		worldSpaceCameraPos.y = 0.5f;
+		worldSpaceCameraPos.z = -1.2f; //2
+		worldSpaceCameraTarget.x = 0.5f;
+		worldSpaceCameraTarget.y = 0.5f;
 		worldSpaceCameraTarget.z = 1.0f;
 
 		View = glm::lookAt(
@@ -373,7 +399,7 @@ public:
 
 		glBindVertexArray(VAO);
 
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
 
 
 
@@ -1078,33 +1104,42 @@ void m_genCube() {
 
 }
 
-void m_genPlane(int x, int y) {
-	int size = x * y * 3;
-	float* verts = new float[size];
+void m_genPlane(int x, int y, float* verts,unsigned int* indices, float* texcoord, float* normals) {
+	int size = (x + 1) * (y + 1);
 	int index = -1;
-	for (int i = 0; i < y; ++i) {
-		for (int j = 0; j < x; ++j) {
+	int index2 = -1;
+	for (int i = 0; i < y + 1; ++i) {
+		for (int j = 0; j < x + 1; ++j) {
 			verts[++index] = j;
 			verts[++index] = i;
 			verts[++index] = 0;
+			texcoord[++index2] = j;
+			texcoord[++index2] = i;
 		}
 	}
 
+	index = -1;
+	index2 = -1;
 	for (int i = 0; i < size; ++i) {
-		verts[i] /= x;
+		verts[++index] /= x;
+		normals[index] = 0.0f;
+		verts[++index] /= x;
+		normals[index] = 0.0f;
+		verts[++index] /= x;
+		normals[index] = -1.0f;
+		texcoord[++index2] /= x;
+		texcoord[++index2] /= x;
 	}
 
-	int faces = (x - 1)*(y - 1);
-	float* indices = new float[faces*2*3];
 	index = -1;
-	for (int i = 0; i < y - 1; ++i) {
-		for (int j = 0; j < x - 1; ++i) {
-			indices[++index] = j + i*j;
-			indices[++index] = j + 1 + (i + 1)*j;
-			indices[++index] = j + (i + 1)*j;
-			indices[++index] = j + i*j;
-			indices[++index] = j + 1 + i*j;
-			indices[++index] = j + 1 + (i + 1)*j;
+	for (int i = 0; i < y; ++i) {
+		for (int j = 0; j < x; ++j) {
+			indices[++index] = j + i*(y+1);
+			indices[++index] = j + 1 + (i + 1)*(y+1);
+			indices[++index] = j + 1 + i*(y+1);
+			indices[++index] = j + i*(y+1);
+			indices[++index] = j + (i + 1)*(y+1);
+			indices[++index] = j + 1 + (i + 1)*(y+1);
 		}
 	}
 }
@@ -1183,9 +1218,9 @@ int main()
 {
 	srand(time(NULL));
 	My_window* window = new My_window("window1");
-	My_window* w2 = new My_window("window2");
+	//My_window* w2 = new My_window("window2");
 	windows.push_back(window);
-	windows.push_back(w2);
+	//windows.push_back(w2);
 	glfwMakeContextCurrent(window->window);
 	currentWindow = window;
 
@@ -1225,7 +1260,7 @@ int main()
 	m_saveAsPNG("kuva.png", wi, he, pic, "k");
 
 	window->setTexture(wi, he, pic);
-	w2->setTexture(wi, he, pic2);
+	//w2->setTexture(wi, he, pic2);
 
 	do {
 		currentWindow->mainLoop(); // windows[i]->mainloop();
