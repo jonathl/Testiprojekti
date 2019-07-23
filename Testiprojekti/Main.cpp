@@ -37,7 +37,8 @@ void m_newWindow();
 void m_combinePictures(float *pic1, float *pic2, float *texture, float str, int width, int height);
 void m_saveAsPNG(char* file_name, int width, int height, float *buffer, char* title);
 
-void m_genPlane(int x, int y, float* verts, unsigned int* indices, float* texcoord, float* normals);
+//void m_genPlane(int x, int y, float* verts, unsigned int* indices, float* texcoord, float* normals);
+Object3D* m_genPlane(int x, int y);
 
 
 class My_window {
@@ -87,6 +88,9 @@ public:
 	GLuint VAO;
 #pragma endregion
 	
+
+	std::vector<Object3D*> obj3D;
+
 	float* texture = NULL;
 	int textureWidth;
 	int textureHeight;
@@ -102,7 +106,7 @@ public:
 		glfwSetMouseButtonCallback(window, mouse_button_callback);
 		glfwSetWindowFocusCallback(window, window_focus_callback);
 		glfwSetWindowCloseCallback(window, window_close_callback);
-		setVAO();
+		//setVAO();
 		setMVP();
 		setProgram();
 		setLighting();
@@ -161,49 +165,32 @@ public:
 	}
 	void setVAO() {
 		glfwMakeContextCurrent(window);
-		
-		int x = 10;
-		int y = 10;
-		int size = (x + 1) * (y + 1);
-		float* texcoord = new float[size * 2];
+		int size = obj3D[0]->verticesSize;
+		float* texcoord = new float[size * 2]; //älä tee aina uusia
 		float* normals = new float[size * 3];
 		float* vertices = new float[size * 3];
-		unsigned int* indices = new unsigned int[x * y * 2 * 3];
-		indicesSize = x * y * 2 * 3;
-		m_genPlane(x, y, vertices, indices, texcoord, normals);
+		indicesSize = obj3D[0]->tris.size() * 3;
+		unsigned int* indices = new unsigned int[indicesSize];
 
-		//float vertices[] = {
-		//	//  Position              Texcoords
-		//	-1.0f,  1.0f, 0.0f, // Top-left
-		//	1.0f,  1.0f, 0.0f, // Top-right
-		//	-1.0f, -1.0f, 0.0f, // Bottom-left
-		//	1.0f, -1.0f, 0.0f  // Bottom-right
-		//};
-
-
-		//float texcoord[] = {
-		//	0.0f, 1.0f,
-		//	1.0f, 1.0f,
-		//	0.0f, 0.0f,
-		//	1.0f, 0.0f
-		//};
-
-		//float normals[] = {
-		//	0.0f, 0.0f, -1.0f, // Top-left
-		//	0.0f, 0.0f, -1.0f, // Top-right
-		//	0.0f, 0.0f, -1.0f, // Bottom-right
-		//	0.0f, 0.0f, -1.0f // Bottom-left
-		//};
-
-		////-1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Top-left
-		////	1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, // Top-right
-		////	-1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom-right
-		////	1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f  // Bottom-left
-
-		//unsigned int indices[] = {
-		//	0, 1, 2, // first triangle
-		//	1, 2, 3  // second triangle
-		//};
+		int index = -1;
+		int index2 = -1;
+		//std::cout << o.verts[0]->x;
+		for (int i = 0; i < size; ++i) {
+			vertices[++index] = obj3D.back()->verts[i]->x;
+			normals[index] = 1;
+			vertices[++index] = obj3D.back()->verts[i]->y;
+			normals[index] = 1;
+			vertices[++index] = obj3D.back()->verts[i]->z;
+			normals[index] = 1;
+			texcoord[++index2] = obj3D.back()->verts[i]->u;
+			texcoord[++index2] = obj3D.back()->verts[i]->v;
+		}
+		index = -1;
+		for (int i = 0; i < indicesSize / 3; ++i) {
+			indices[++index] = obj3D.back()->tris[i]->corners[0].index;
+			indices[++index] = obj3D.back()->tris[i]->corners[1].index;
+			indices[++index] = obj3D.back()->tris[i]->corners[2].index;
+		}
 
 		unsigned int VNO, VBO, mVAO, EBO, VTC;
 		glGenVertexArrays(1, &mVAO);
@@ -220,11 +207,11 @@ public:
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * size * 3, vertices, GL_STATIC_DRAW);
 
-		glBindBuffer(GL_ARRAY_BUFFER, VTC);
+		glBindBuffer(GL_ARRAY_BUFFER, VTC); //texcoord
 		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * size * 2, texcoord, GL_STATIC_DRAW);
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * x * y * 2 * 3, indices, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indicesSize, indices, GL_STATIC_DRAW);
 
 		// position attribute
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -425,6 +412,11 @@ public:
 			specularAmount
 		);
 		glfwSwapBuffers(window);
+	}
+
+	void AddObject3D(Object3D* object) {
+		obj3D.push_back(object);
+		setVAO();
 	}
 
 	void closeWindow() {
@@ -952,7 +944,8 @@ void m_addContrast(float *texture, float str, float displacement, int width, int
 
 void write_row_callback(png_structp png_ptr, png_uint_32 row, int pass){
 	//std::cout << row <<"\n";
-}
+}
+
 void m_saveAsPNG(char* file_name, int width, int height, float *buffer, char* title) {
 	png_structp png_ptr = NULL;
 	png_infop info_ptr = NULL;
@@ -1027,121 +1020,146 @@ void m_saveAsPNG(char* file_name, int width, int height, float *buffer, char* ti
 	if (row != NULL) free(row);
 }
 
-void m_readPNG_image() {
-	png_image image;
-	memset(&image, 0, (sizeof image));
-	image.version = PNG_IMAGE_VERSION;
-	if (png_image_begin_read_from_file(&image, "helmet_kawaii.png") != 0) {
-		png_bytep buffer;
-		image.format = PNG_FORMAT_RGBA;
-		buffer = (png_bytep)malloc(PNG_IMAGE_SIZE(image));
-		if (buffer != NULL && png_image_finish_read(&image, NULL, buffer, 0, NULL) != 0) {
-			if (png_image_write_to_file(&image, "kuva1.png", 0, buffer, 0, NULL) != 0) {
-				std::cout << "we did it \n";
-			}
-		}
-		else {
-			if (buffer == NULL) {
-				png_image_free(&image);
-			}
-			else {
-				free(buffer);
-			}
-		}
-	}
-}
+//void m_readPNG_image() {
+//	png_image image;
+//	memset(&image, 0, (sizeof image));
+//	image.version = PNG_IMAGE_VERSION;
+//	if (png_image_begin_read_from_file(&image, "helmet_kawaii.png") != 0) {
+//		png_bytep buffer;
+//		image.format = PNG_FORMAT_RGBA;
+//		buffer = (png_bytep)malloc(PNG_IMAGE_SIZE(image));
+//		if (buffer != NULL && png_image_finish_read(&image, NULL, buffer, 0, NULL) != 0) {
+//			if (png_image_write_to_file(&image, "kuva1.png", 0, buffer, 0, NULL) != 0) {
+//				std::cout << "we did it \n";
+//			}
+//		}
+//		else {
+//			if (buffer == NULL) {
+//				png_image_free(&image);
+//			}
+//			else {
+//				free(buffer);
+//			}
+//		}
+//	}
+//}
 
-void m_readPNG(char* file_name, png_structp png_ptr, png_infop info_ptr, png_bytepp row_pointers) {
-	FILE *fp = fopen(file_name, "rb");
-	if (!fp) {
-		return;
-	}
-	unsigned char header[9];
-	int number_to_check = 8;
-	fread(header, 1, number_to_check, fp);
-	int is_png = !png_sig_cmp(header, 0, 8);
-	if (!is_png) {
-		return;
-	}
-
-	png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-	if (!png_ptr) {
-		return;
-	}
-	info_ptr = png_create_info_struct(png_ptr);
-	if (!info_ptr) {
-		png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
-	}
-	png_infop end_info = png_create_info_struct(png_ptr);
-	if (!end_info) {
-		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
-	}
-	png_init_io(png_ptr, fp);
-
-	png_set_sig_bytes(png_ptr, number_to_check);
-
-	png_read_info(png_ptr, info_ptr);
-	png_uint_32 width, height;
-	int bit_depth, color_type, interlace_type, compression_type, filter_method;
-	png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, &interlace_type, NULL, NULL);
-
-	row_pointers = (png_bytepp)png_malloc(png_ptr, sizeof(png_bytepp) * height);
-	for (int i = 0; i < height; i++) {
-		row_pointers[i] = (png_bytep)png_malloc(png_ptr, width * sizeof(png_bytep));
-	}
-
-	png_set_rows(png_ptr, info_ptr, row_pointers);
-	
-	png_read_image(png_ptr, row_pointers);
-	png_read_end(png_ptr, end_info);
-
-	std::cout << (int)row_pointers[1][1] << "\n";
-
-	png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-}
+//void m_readPNG(char* file_name, png_structp png_ptr, png_infop info_ptr, png_bytepp row_pointers) {
+//	FILE *fp = fopen(file_name, "rb");
+//	if (!fp) {
+//		return;
+//	}
+//	unsigned char header[9];
+//	int number_to_check = 8;
+//	fread(header, 1, number_to_check, fp);
+//	int is_png = !png_sig_cmp(header, 0, 8);
+//	if (!is_png) {
+//		return;
+//	}
+//
+//	png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+//	if (!png_ptr) {
+//		return;
+//	}
+//	info_ptr = png_create_info_struct(png_ptr);
+//	if (!info_ptr) {
+//		png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
+//	}
+//	png_infop end_info = png_create_info_struct(png_ptr);
+//	if (!end_info) {
+//		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+//	}
+//	png_init_io(png_ptr, fp);
+//
+//	png_set_sig_bytes(png_ptr, number_to_check);
+//
+//	png_read_info(png_ptr, info_ptr);
+//	png_uint_32 width, height;
+//	int bit_depth, color_type, interlace_type, compression_type, filter_method;
+//	png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, &interlace_type, NULL, NULL);
+//
+//	row_pointers = (png_bytepp)png_malloc(png_ptr, sizeof(png_bytepp) * height);
+//	for (int i = 0; i < height; i++) {
+//		row_pointers[i] = (png_bytep)png_malloc(png_ptr, width * sizeof(png_bytep));
+//	}
+//
+//	png_set_rows(png_ptr, info_ptr, row_pointers);
+//	
+//	png_read_image(png_ptr, row_pointers);
+//	png_read_end(png_ptr, end_info);
+//
+//	std::cout << (int)row_pointers[1][1] << "\n";
+//
+//	png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
+//}
 
 void m_genCube() {
 
 }
 
-void m_genPlane(int x, int y, float* verts,unsigned int* indices, float* texcoord, float* normals) {
-	int size = (x + 1) * (y + 1);
+//void m_genPlane(int x, int y, float* verts,unsigned int* indices, float* texcoord, float* normals) {
+//	int size = (x + 1) * (y + 1);
+//	int index = -1;
+//	int index2 = -1;
+//	for (int i = 0; i < y + 1; ++i) {
+//		for (int j = 0; j < x + 1; ++j) {
+//			verts[++index] = j;
+//			verts[++index] = i;
+//			verts[++index] = 0;
+//			texcoord[++index2] = j;
+//			texcoord[++index2] = i;
+//		}
+//	}
+//
+//	index = -1;
+//	index2 = -1;
+//	for (int i = 0; i < size; ++i) {
+//		verts[++index] /= x;
+//		normals[index] = 0.0f;
+//		verts[++index] /= x;
+//		normals[index] = 0.0f;
+//		verts[++index] /= x;
+//		normals[index] = -1.0f;
+//		texcoord[++index2] /= x;
+//		texcoord[++index2] /= x;
+//	}
+//
+//	index = -1;
+//	for (int i = 0; i < y; ++i) {
+//		for (int j = 0; j < x; ++j) {
+//			indices[++index] = j + i*(y+1);
+//			indices[++index] = j + 1 + (i + 1)*(y+1);
+//			indices[++index] = j + 1 + i*(y+1);
+//			indices[++index] = j + i*(y+1);
+//			indices[++index] = j + (i + 1)*(y+1);
+//			indices[++index] = j + 1 + (i + 1)*(y+1);
+//		}
+//	}
+//}
+
+Object3D* m_genPlane(int x, int y) {
+	Object3D* obj = new Object3D();
+	int size = x  * y;
 	int index = -1;
 	int index2 = -1;
-	for (int i = 0; i < y + 1; ++i) {
-		for (int j = 0; j < x + 1; ++j) {
-			verts[++index] = j;
-			verts[++index] = i;
-			verts[++index] = 0;
-			texcoord[++index2] = j;
-			texcoord[++index2] = i;
-		}
-	}
-
-	index = -1;
-	index2 = -1;
-	for (int i = 0; i < size; ++i) {
-		verts[++index] /= x;
-		normals[index] = 0.0f;
-		verts[++index] /= x;
-		normals[index] = 0.0f;
-		verts[++index] /= x;
-		normals[index] = -1.0f;
-		texcoord[++index2] /= x;
-		texcoord[++index2] /= x;
-	}
-
-	index = -1;
-	for (int i = 0; i < y; ++i) {
+	for (int i = 0; i < y ; ++i) {
 		for (int j = 0; j < x; ++j) {
-			indices[++index] = j + i*(y+1);
-			indices[++index] = j + 1 + (i + 1)*(y+1);
-			indices[++index] = j + 1 + i*(y+1);
-			indices[++index] = j + i*(y+1);
-			indices[++index] = j + (i + 1)*(y+1);
-			indices[++index] = j + 1 + (i + 1)*(y+1);
+			Vertex* v = obj->AddVertex((float)j/ (float)(x-1), (float)i/ (float)(x-1), 0);
+			v->u = (float)j/ (float)(x -1);
+			v->v = (float)i/ (float)(x-1);
 		}
 	}
+
+	index = -1;
+	for (int i = 0; i < y - 1; ++i) {
+		for (int j = 0; j < x - 1; ++j) {
+			Triangle* tri = new Triangle(*obj->verts[(j + i * (y))], *obj->verts[(j + 1 + (i + 1) * (y))], *obj->verts[(j + 1 + i * (y))]);
+			obj->tris.push_back(tri);
+			tri = new Triangle(*obj->verts[(j + i * (y))], *obj->verts[(j + (i + 1) * (y))], *obj->verts[(j + 1 + (i + 1) * (y))]);
+			obj->tris.push_back(tri);
+		}
+	}
+	return obj;
 }
 
 GLuint setVAO() {
@@ -1223,6 +1241,8 @@ int main()
 	//windows.push_back(w2);
 	glfwMakeContextCurrent(window->window);
 	currentWindow = window;
+	currentWindow->AddObject3D(m_genPlane(5, 5));
+	std::cout << currentWindow->obj3D[0]->tris.size() << "\n";
 
 	const int wi = 700, he = 700;
 
@@ -1237,10 +1257,10 @@ int main()
 	pn.m_genPerlinNoise(pic,3);
 	clock_t end = clock();
 	std::cout << double(end - begin) / CLOCKS_PER_SEC << "\n";
-	m_saveAsPNG("perlin.png", wi, he, pic, "k");
+	/*m_saveAsPNG("perlin.png", wi, he, pic, "k");
 	m_addContrast(pic2, 0.2f, 0.3f, wi, he);
 	m_saveAsPNG("worley.png", wi, he, pic2, "k");
-	m_combinePictures(pic, pic2, pic, 0.4f, wi, he);
+	m_combinePictures(pic, pic2, pic, 0.4f, wi, he);*/
 
 	m_genOneColorTex(wi, he, pic, 0.7f, 0.7f, 0.9f);
 	//m_drawGridOnTex(wi, he, 125, pic);
@@ -1257,7 +1277,7 @@ int main()
 	////f.printPoints();
 	m_drawFractal(f, pic, wi, he);
 	//m_drawLine(f.c0.x, f.c0.y, f.c1.x, f.c1.y, pic, wi, he);
-	m_saveAsPNG("kuva.png", wi, he, pic, "k");
+	m_saveAsPNG("kuvaggg.png", wi, he, pic, "k");
 
 	window->setTexture(wi, he, pic);
 	//w2->setTexture(wi, he, pic2);

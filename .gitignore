@@ -1,4 +1,6 @@
 include/
+include/glm/
+include/glm/detail/
 include/GL/eglew.h
 include/GL/glew.h
 include/GL/glxew.h
@@ -9,3 +11,4 @@ include/glfw3.h
 include/glfw3native.h
 include/glm/CMakeLists.txt
 Testiprojekti.VC.VC.opendb
+.vs/
