@@ -64,8 +64,9 @@ private:
 
 public:
 	int verticesSize = 0;
-	float3* pivotPoint = new float3(0, 0, 0);
-	float scaleFactor = 1;
+	float3* pivotPoint = new float3(0.5, 0.5, 0);
+	float3* rotateFactor = new float3(0.0, 0.0, 0.0);
+	float scaleFactor = 2.30f;
 	/*float* vertices;
 	float* normals;
 	float* texcoord;

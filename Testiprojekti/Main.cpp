@@ -176,11 +176,11 @@ public:
 		int index2 = -1;
 		//std::cout << o.verts[0]->x;
 		for (int i = 0; i < size; ++i) {
-			vertices[++index] = obj3D.back()->verts[i]->x;
+			vertices[++index] = obj3D.back()->verts[i]->x * obj3D.back()->scaleFactor - obj3D.back()->pivotPoint->x * (obj3D.back()->scaleFactor -1);
 			normals[index] = 1;
-			vertices[++index] = obj3D.back()->verts[i]->y;
+			vertices[++index] = obj3D.back()->verts[i]->y * obj3D.back()->scaleFactor - obj3D.back()->pivotPoint->y * (obj3D.back()->scaleFactor - 1);
 			normals[index] = 1;
-			vertices[++index] = obj3D.back()->verts[i]->z;
+			vertices[++index] = obj3D.back()->verts[i]->z * obj3D.back()->scaleFactor - obj3D.back()->pivotPoint->z * (obj3D.back()->scaleFactor - 1);
 			normals[index] = 1;
 			texcoord[++index2] = obj3D.back()->verts[i]->u;
 			texcoord[++index2] = obj3D.back()->verts[i]->v;
