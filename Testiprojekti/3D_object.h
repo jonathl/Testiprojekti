@@ -65,8 +65,8 @@ private:
 public:
 	int verticesSize = 0;
 	float3* pivotPoint = new float3(0.5, 0.5, 0);
-	float3* rotateFactor = new float3(0.0, 0.0, 0.0);
-	float scaleFactor = 2.30f;
+	float3* rotateFactor = new float3(45.0, 45.0, 45.0);
+	float3* scaleFactor = new float3(0.50, 0.50, 1.0);
 	/*float* vertices;
 	float* normals;
 	float* texcoord;
@@ -85,7 +85,7 @@ public:
 		++verticesSize;
 		return ver;
 	}
-	void Scale(float newScale) {
+	void Scale(float3* newScale) {
 		scaleFactor = newScale;
 	}
 	void Rotate(float x, float y, float z) {

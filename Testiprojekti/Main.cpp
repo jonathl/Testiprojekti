@@ -174,13 +174,15 @@ public:
 
 		int index = -1;
 		int index2 = -1;
-		//std::cout << o.verts[0]->x;
 		for (int i = 0; i < size; ++i) {
-			vertices[++index] = obj3D.back()->verts[i]->x * obj3D.back()->scaleFactor - obj3D.back()->pivotPoint->x * (obj3D.back()->scaleFactor -1);
+			float3 vert = float3(obj3D.back()->verts[i]->x, obj3D.back()->verts[i]->y, obj3D.back()->verts[i]->z);
+			vert = ScaleVertex(vert, *obj3D.back()->scaleFactor, *obj3D.back()->pivotPoint);
+			vert = RotateVertex(vert, *obj3D.back()->rotateFactor, *obj3D.back()->pivotPoint);
+			vertices[++index] = vert.x; 
 			normals[index] = 1;
-			vertices[++index] = obj3D.back()->verts[i]->y * obj3D.back()->scaleFactor - obj3D.back()->pivotPoint->y * (obj3D.back()->scaleFactor - 1);
+			vertices[++index] = vert.y;
 			normals[index] = 1;
-			vertices[++index] = obj3D.back()->verts[i]->z * obj3D.back()->scaleFactor - obj3D.back()->pivotPoint->z * (obj3D.back()->scaleFactor - 1);
+			vertices[++index] = vert.z; 
 			normals[index] = 1;
 			texcoord[++index2] = obj3D.back()->verts[i]->u;
 			texcoord[++index2] = obj3D.back()->verts[i]->v;
@@ -412,6 +414,31 @@ public:
 			specularAmount
 		);
 		glfwSwapBuffers(window);
+	}
+
+	float3 ScaleVertex(float3 v, float3 sf, float3 pivot) {
+		float3 rv;
+		rv.x = v.x * sf.x - pivot.x * (sf.x - 1);
+		rv.y = v.y * sf.y - pivot.y * (sf.y - 1);
+		rv.z = v.z * sf.z - pivot.z * (sf.z - 1);
+		return rv;
+	}
+
+	float3 RotateVertex(float3 v, float3 rf, float3 pivot) {
+		float3 rv, tv; //return value, temp value
+		//rotate around z axis
+		rv.x = (v.x - pivot.x) * cos(radians(rf.z)) - (v.y - pivot.y) * sin(radians(rf.z)) + pivot.x;
+		rv.y = (v.x - pivot.x) * sin(radians(rf.z)) + (v.y - pivot.y) * cos(radians(rf.z)) + pivot.y;
+		rv.z = v.z;
+		//rotate around y axis
+		tv.x = (rv.x - pivot.x) * cos(radians(rf.y)) - (rv.z - pivot.z) * sin(radians(rf.y)) + pivot.x;
+		tv.z = (rv.x - pivot.x) * sin(radians(rf.y)) + (rv.z - pivot.z) * cos(radians(rf.y)) + pivot.z;
+		tv.y = rv.y;
+		//rotate around x axis
+		rv.y = (tv.y - pivot.y) * cos(radians(rf.x)) - (tv.z - pivot.z) * sin(radians(rf.x)) + pivot.y;
+		rv.z = (tv.y - pivot.y) * sin(radians(rf.x)) + (tv.z - pivot.z) * cos(radians(rf.x)) + pivot.z;
+		rv.x = tv.x;
+		return rv;
 	}
 
 	void AddObject3D(Object3D* object) {
@@ -919,11 +946,11 @@ void m_addContrast(float *texture, float str, float displacement, int width, int
 	if (str == 0) {
 		return;
 	}
-	float min = atanf(2 * 3.141 * str * (-0.5f + displacement)), max = atanf(2 * 3.141 * str *  (0.5f + displacement));
+	float min = atanf(2 * 3.141 * str * (-0.5 + displacement)), max = atanf(2 * 3.141 * str *  (0.5 + displacement));
 	float value;
 	for (int i = 0; i < height*width * 3; ++i)
 	{
-		value = atanf(2 * 3.141 * str * (texture[i] - 0.5f + displacement));
+		value = atanf(2 * 3.141 * str * (texture[i] - 0.5 + displacement));
 		texture[i] = m_changeScale(min, max, 0, 1, value);
 	}
 }
