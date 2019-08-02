@@ -176,8 +176,9 @@ public:
 		int index2 = -1;
 		for (int i = 0; i < size; ++i) {
 			float3 vert = float3(obj3D.back()->verts[i]->x, obj3D.back()->verts[i]->y, obj3D.back()->verts[i]->z);
-			vert = ScaleVertex(vert, *obj3D.back()->scaleFactor, *obj3D.back()->pivotPoint);
-			vert = RotateVertex(vert, *obj3D.back()->rotateFactor, *obj3D.back()->pivotPoint);
+			vert = MoveVertex(vert, *obj3D.back()->positionFactor);
+			vert = ScaleVertex(vert, *obj3D.back()->scaleFactor, *obj3D.back()->pivotPoint + *obj3D.back()->positionFactor);
+			vert = RotateVertex(vert, *obj3D.back()->rotateFactor, *obj3D.back()->pivotPoint + *obj3D.back()->positionFactor);
 			vertices[++index] = vert.x; 
 			normals[index] = 1;
 			vertices[++index] = vert.y;
@@ -241,11 +242,14 @@ public:
 		worldSpaceCameraTarget.y = 0.5f;
 		worldSpaceCameraTarget.z = 1.0f;
 
+
 		View = glm::lookAt(
 			worldSpaceCameraPos,
 			worldSpaceCameraTarget,
-			glm::vec3(1, 0, 0)
+			glm::vec3(0, 1, 0)
 		);
+
+		//glScalef(1., 1., -1.);
 
 		Model = glm::mat4(3.0f);
 	}
@@ -414,6 +418,14 @@ public:
 			specularAmount
 		);
 		glfwSwapBuffers(window);
+	}
+
+	float3 MoveVertex(float3 v, float3 pf) {
+		float3 rv;
+		rv.x = v.x + pf.x;
+		rv.y = v.y + pf.y;
+		rv.z = v.z + pf.z;
+		return rv;
 	}
 
 	float3 ScaleVertex(float3 v, float3 sf, float3 pivot) {

@@ -18,6 +18,9 @@ public:
 		y = y0;
 		z = z0;
 	}
+	float3 float3::operator+(const float3& other) {
+		return float3(x + other.x, y + other.y, z + other.z);
+	}
 };
 
 class Vertex {
@@ -65,6 +68,7 @@ private:
 public:
 	int verticesSize = 0;
 	float3* pivotPoint = new float3(0.5, 0.5, 0);
+	float3* positionFactor = new float3(0.25, 0.20, 0.0);
 	float3* rotateFactor = new float3(45.0, 45.0, 45.0);
 	float3* scaleFactor = new float3(0.50, 0.50, 1.0);
 	/*float* vertices;
