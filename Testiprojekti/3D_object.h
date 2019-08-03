@@ -68,8 +68,8 @@ private:
 public:
 	int verticesSize = 0;
 	float3* pivotPoint = new float3(0.5, 0.5, 0);
-	float3* positionFactor = new float3(0.25, 0.20, 0.0);
-	float3* rotateFactor = new float3(45.0, 45.0, 45.0);
+	float3* positionFactor = new float3(0.0, 0.0, 0.0);
+	float3* rotateFactor = new float3(0.0, 0.0, 45.0);
 	float3* scaleFactor = new float3(0.50, 0.50, 1.0);
 	/*float* vertices;
 	float* normals;

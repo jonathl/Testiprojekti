@@ -107,7 +107,7 @@ public:
 		glfwSetWindowFocusCallback(window, window_focus_callback);
 		glfwSetWindowCloseCallback(window, window_close_callback);
 		//setVAO();
-		setMVP();
+		//setMVP();
 		setProgram();
 		setLighting();
 	}
@@ -176,9 +176,10 @@ public:
 		int index2 = -1;
 		for (int i = 0; i < size; ++i) {
 			float3 vert = float3(obj3D.back()->verts[i]->x, obj3D.back()->verts[i]->y, obj3D.back()->verts[i]->z);
-			vert = MoveVertex(vert, *obj3D.back()->positionFactor);
+			//järjestys ehkä eri, also nää saattaa saada siirrettyä shaderiin
+			/*vert = MoveVertex(vert, *obj3D.back()->positionFactor);
 			vert = ScaleVertex(vert, *obj3D.back()->scaleFactor, *obj3D.back()->pivotPoint + *obj3D.back()->positionFactor);
-			vert = RotateVertex(vert, *obj3D.back()->rotateFactor, *obj3D.back()->pivotPoint + *obj3D.back()->positionFactor);
+			vert = RotateVertex(vert, *obj3D.back()->rotateFactor, *obj3D.back()->pivotPoint + *obj3D.back()->positionFactor);*/
 			vertices[++index] = vert.x; 
 			normals[index] = 1;
 			vertices[++index] = vert.y;
@@ -237,7 +238,7 @@ public:
 
 		worldSpaceCameraPos.x = 0.5f;
 		worldSpaceCameraPos.y = 0.5f;
-		worldSpaceCameraPos.z = -1.2f; //2
+		worldSpaceCameraPos.z = -1.2f;
 		worldSpaceCameraTarget.x = 0.5f;
 		worldSpaceCameraTarget.y = 0.5f;
 		worldSpaceCameraTarget.z = 1.0f;
@@ -249,9 +250,19 @@ public:
 			glm::vec3(0, 1, 0)
 		);
 
-		//glScalef(1., 1., -1.);
+		Object3D obj = *obj3D.back();
+		Model = glm::mat4(1.0f);
+		//translate
+		glm::mat4 mTranslate = glm::translate(Model, glm::vec3(obj.positionFactor->x, obj.positionFactor->y, obj.positionFactor->z));
+		//rotate
+		glm::mat4 mRotate = glm::rotate(Model, radians(obj.rotateFactor->z) ,glm::vec3(0,0,1)) * glm::rotate(Model, radians(obj.rotateFactor->y), glm::vec3(0, 1, 0)) * glm::rotate(Model, radians(obj.rotateFactor->x), glm::vec3(1, 0, 0));
+		glm::vec4 rotatePivot = mRotate * vec4(obj.pivotPoint->x, obj.pivotPoint->y, obj.pivotPoint->z, 1);
+		glm::mat4 mTranslateRotatePivot = glm::translate(Model, glm::vec3(-(rotatePivot[0]-obj.pivotPoint->x), -(rotatePivot[1] - obj.pivotPoint->y), -(rotatePivot[2] - obj.pivotPoint->z)));
+		//scale
+		glm::mat4 mScale = glm::scale(Model, glm::vec3(obj.scaleFactor->x, obj.scaleFactor->y, obj.scaleFactor->z));
+		glm::mat4 mTranslateScalePivot = glm::translate(Model, glm::vec3(obj.pivotPoint->x * obj.scaleFactor->x, obj.pivotPoint->y * obj.scaleFactor->y, obj.pivotPoint->z * obj.scaleFactor->z));
 
-		Model = glm::mat4(3.0f);
+		Model = Model * mTranslate * mTranslateRotatePivot * mRotate * mTranslateScalePivot * mScale;
 	}
 	void setLighting() {
 		ambientColor.r = 1.0f;
@@ -456,6 +467,7 @@ public:
 	void AddObject3D(Object3D* object) {
 		obj3D.push_back(object);
 		setVAO();
+		setMVP();
 	}
 
 	void closeWindow() {
