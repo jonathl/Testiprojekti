@@ -69,8 +69,8 @@ public:
 	int verticesSize = 0;
 	float3* pivotPoint = new float3(0.5, 0.5, 0);
 	float3* positionFactor = new float3(0.0, 0.0, 0.0);
-	float3* rotateFactor = new float3(0.0, 0.0, 45.0);
-	float3* scaleFactor = new float3(0.50, 0.50, 1.0);
+	float3* rotateFactor = new float3(0.0, 0.0, 80.0);
+	float3* scaleFactor = new float3(1.0, 1.0, 1.0);
 	/*float* vertices;
 	float* normals;
 	float* texcoord;
@@ -92,8 +92,18 @@ public:
 	void Scale(float3* newScale) {
 		scaleFactor = newScale;
 	}
+	void AddScale(float3 newScale) {
+		scaleFactor->x += newScale.x;
+		scaleFactor->y += newScale.y;
+		scaleFactor->z += newScale.z;
+	}
+	void DecScale(float3 newScale) {
+		scaleFactor->x -= newScale.x;
+		scaleFactor->y -= newScale.y;
+		scaleFactor->z -= newScale.z;
+	}
 	void Rotate(float x, float y, float z) {
-
+		rotateFactor->z += z;
 	}
 	void FindCenter() {
 
