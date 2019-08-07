@@ -80,21 +80,21 @@ public:
 
 	glm::mat4 Projection;
 	glm::mat4 View;
-	glm::mat4 Model;
+	std::vector<glm::mat4> Models;
 
 	glm::vec3 cameraDirection = glm::normalize(worldSpaceCameraPos - worldSpaceCameraTarget);
 
 	GLFWwindow* window;
-	GLuint VAO;
 #pragma endregion
 	
 
+	std::vector<GLuint> VAO;
+	std::vector<GLuint> tex;
 	std::vector<Object3D*> obj3D;
 
-	float* texture = NULL;
+	/*float* texture = NULL;
 	int textureWidth;
-	int textureHeight;
-	GLuint tex;
+	int textureHeight;*/
 
 	My_window(char* n) {
 		name = n;
@@ -165,11 +165,11 @@ public:
 	}
 	void setVAO() {
 		glfwMakeContextCurrent(window);
-		int size = obj3D[0]->verticesSize;
+		int size = obj3D.back()->verticesSize;
 		float* texcoord = new float[size * 2]; //älä tee aina uusia
 		float* normals = new float[size * 3];
 		float* vertices = new float[size * 3];
-		indicesSize = obj3D[0]->tris.size() * 3;
+		indicesSize = obj3D.back()->tris.size() * 3;
 		unsigned int* indices = new unsigned int[indicesSize];
 
 		int index = -1;
@@ -226,7 +226,12 @@ public:
 		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(3);
 
-		VAO = mVAO;
+		delete[] texcoord;
+		delete[] normals;
+		delete[] vertices;
+		delete[] indices;
+
+		VAO.push_back(mVAO);
 	}
 
 	void setMVP() {
@@ -247,7 +252,7 @@ public:
 		);
 
 
-		//mirrors view
+		//Flips view x-axis
 		View = glm::scale(View, glm::vec3(-1, 1, 1));
 		View = glm::translate(View, glm::vec3(-1, 0, 0));
 
@@ -270,19 +275,19 @@ public:
 		specularColor.y = 1.0f;
 		specularColor.z = 1.0f;
 	}
-	void setTexture(int wi, int he, float* pic) {
-		texture = pic;
-		textureWidth = wi;
-		textureHeight = he;
+	void setTexture(Object3D o, int wi, int he, float* pic) {
+		o.SetTexture(wi, he, pic);
+		GLuint t; 
 		glfwMakeContextCurrent(window);
-		glGenTextures(1, &tex);
-		glBindTexture(GL_TEXTURE_2D, tex);
+		glGenTextures(1, &t);
+		glBindTexture(GL_TEXTURE_2D, t);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wi, he, 0, GL_RGB, GL_FLOAT, pic);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, o.textureWidth, o.textureHeight, 0, GL_RGB, GL_FLOAT, o.texture);
+		tex.push_back(t);
 	}
 	GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path) {
 
@@ -375,7 +380,7 @@ public:
 
 	void SetModelMatrix() {
 		Object3D obj = *obj3D.back();
-		Model = glm::mat4(1.0f);
+		glm::mat4 Model = glm::mat4(1.0f);
 		//translate
 		glm::mat4 mTranslate = glm::translate(Model, glm::vec3(obj.positionFactor->x, obj.positionFactor->y, obj.positionFactor->z));
 		//rotate
@@ -387,28 +392,47 @@ public:
 		glm::mat4 mTranslateScalePivot = glm::translate(Model, glm::vec3(-obj.pivotPoint->x * (obj.scaleFactor->x-1), -obj.pivotPoint->y * (obj.scaleFactor->y-1), -obj.pivotPoint->z * (obj.scaleFactor->z-1)));
 
 		Model = Model * mTranslate * mTranslateRotatePivot * mRotate * mTranslateScalePivot * mScale;
+		Models.push_back(Model);
+	}
+
+	void SetModelMatrix(int i) {
+		Object3D obj = *obj3D[i];
+		glm::mat4 Model = glm::mat4(1.0f);
+		//translate
+		glm::mat4 mTranslate = glm::translate(Model, glm::vec3(obj.positionFactor->x, obj.positionFactor->y, obj.positionFactor->z));
+		//rotate
+		glm::mat4 mRotate = glm::rotate(Model, radians(obj.rotateFactor->z), glm::vec3(0, 0, 1)) * glm::rotate(Model, radians(obj.rotateFactor->y), glm::vec3(0, 1, 0)) * glm::rotate(Model, radians(obj.rotateFactor->x), glm::vec3(1, 0, 0));
+		glm::vec4 rotatePivot = mRotate * vec4(obj.pivotPoint->x, obj.pivotPoint->y, obj.pivotPoint->z, 1);
+		glm::mat4 mTranslateRotatePivot = glm::translate(Model, glm::vec3(-(rotatePivot[0] - obj.pivotPoint->x), -(rotatePivot[1] - obj.pivotPoint->y), -(rotatePivot[2] - obj.pivotPoint->z)));
+		//scale
+		glm::mat4 mScale = glm::scale(Model, glm::vec3(obj.scaleFactor->x, obj.scaleFactor->y, obj.scaleFactor->z));
+		glm::mat4 mTranslateScalePivot = glm::translate(Model, glm::vec3(-obj.pivotPoint->x * (obj.scaleFactor->x - 1), -obj.pivotPoint->y * (obj.scaleFactor->y - 1), -obj.pivotPoint->z * (obj.scaleFactor->z - 1)));
+
+		Model = Model * mTranslate * mTranslateRotatePivot * mRotate * mTranslateScalePivot * mScale;
+		Models[i] = (Model);
 	}
 
 	void mainLoop() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+		//shaderit
 		glUseProgram(programID);
 
+		//ModelViewProjection Matriisit
+		for(int i = 0; i < VAO.size(); ++i)
+		{
+			glUniformMatrix4fv(MMMatrixID, 1, GL_FALSE, &Models[i][0][0]); // &Model[0][0]
+			glUniformMatrix4fv(VMMatrixID, 1, GL_FALSE, &View[0][0]);
+			glUniformMatrix4fv(PVMatrixID, 1, GL_FALSE, &Projection[0][0]);
 
-		glUniformMatrix4fv(MMMatrixID, 1, GL_FALSE, &Model[0][0]);
-		glUniformMatrix4fv(VMMatrixID, 1, GL_FALSE, &View[0][0]);
-		glUniformMatrix4fv(PVMatrixID, 1, GL_FALSE, &Projection[0][0]);
+			invTranspose = glm::transpose(glm::inverse(glm::mat3(Models[i])));
+			glUniformMatrix3fv(ITMatrixID, 1, GL_FALSE, &invTranspose[0][0]);
 
-		invTranspose = glm::transpose(glm::inverse(glm::mat3(Model)));
-		glUniformMatrix3fv(ITMatrixID, 1, GL_FALSE, &invTranspose[0][0]);
+			glBindTexture(GL_TEXTURE_2D, tex[i]); //texturit voi varmaan asettaa eri järjestykses
 
+			glBindVertexArray(VAO[i]);
 
-
-		glBindTexture(GL_TEXTURE_2D, tex);
-
-		glBindVertexArray(VAO);
-
-		glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
+			glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
+		}
 
 
 
@@ -436,39 +460,6 @@ public:
 		glfwSwapBuffers(window);
 	}
 
-	float3 MoveVertex(float3 v, float3 pf) {
-		float3 rv;
-		rv.x = v.x + pf.x;
-		rv.y = v.y + pf.y;
-		rv.z = v.z + pf.z;
-		return rv;
-	}
-
-	float3 ScaleVertex(float3 v, float3 sf, float3 pivot) {
-		float3 rv;
-		rv.x = v.x * sf.x - pivot.x * (sf.x - 1);
-		rv.y = v.y * sf.y - pivot.y * (sf.y - 1);
-		rv.z = v.z * sf.z - pivot.z * (sf.z - 1);
-		return rv;
-	}
-
-	float3 RotateVertex(float3 v, float3 rf, float3 pivot) {
-		float3 rv, tv; //return value, temp value
-		//rotate around z axis
-		rv.x = (v.x - pivot.x) * cos(radians(rf.z)) - (v.y - pivot.y) * sin(radians(rf.z)) + pivot.x;
-		rv.y = (v.x - pivot.x) * sin(radians(rf.z)) + (v.y - pivot.y) * cos(radians(rf.z)) + pivot.y;
-		rv.z = v.z;
-		//rotate around y axis
-		tv.x = (rv.x - pivot.x) * cos(radians(rf.y)) - (rv.z - pivot.z) * sin(radians(rf.y)) + pivot.x;
-		tv.z = (rv.x - pivot.x) * sin(radians(rf.y)) + (rv.z - pivot.z) * cos(radians(rf.y)) + pivot.z;
-		tv.y = rv.y;
-		//rotate around x axis
-		rv.y = (tv.y - pivot.y) * cos(radians(rf.x)) - (tv.z - pivot.z) * sin(radians(rf.x)) + pivot.y;
-		rv.z = (tv.y - pivot.y) * sin(radians(rf.x)) + (tv.z - pivot.z) * cos(radians(rf.x)) + pivot.z;
-		rv.x = tv.x;
-		return rv;
-	}
-
 	void AddObject3D(Object3D* object) {
 		obj3D.push_back(object);
 		setVAO();
@@ -490,6 +481,8 @@ bool closeProgram = false;
 bool ctrlDown = false;
 bool lineMode = false;
 
+
+#pragma region WindowCallbacks
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
@@ -520,7 +513,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		for (int i = 0; i < windows.size(); ++i) {
 			if (windows[i]->window == window) {
 				windows[i]->obj3D.back()->AddScale(float3(0.05f,0.05f,0));
-				windows[i]->SetModelMatrix();
+				windows[i]->SetModelMatrix(1);
 				break;
 			}
 		}
@@ -530,7 +523,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		for (int i = 0; i < windows.size(); ++i) {
 			if (windows[i]->window == window) {
 				windows[i]->obj3D.back()->DecScale(float3(0.05f, 0.05f, 0));
-				windows[i]->SetModelMatrix();
+				windows[i]->SetModelMatrix(1);
 				break;
 			}
 		}
@@ -539,59 +532,59 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_8 && action == GLFW_REPEAT) {
 		for (int i = 0; i < windows.size(); ++i) {
 			if (windows[i]->window == window) {
-				windows[i]->obj3D.back()->Rotate(0, 0, 5);
-				windows[i]->SetModelMatrix();
+				windows[i]->obj3D.back()->AddRotate(0, 0, 5);
+				windows[i]->SetModelMatrix(1);
 				break;
 			}
 		}
 	}
 
-	if (key == GLFW_KEY_C && action == GLFW_PRESS) {
-		if (previousWindow != NULL) {
-			My_window* p = previousWindow;
-			My_window* c = currentWindow;
-			m_newWindow();
-			windows.back()->texture = new float[c->textureWidth * c->textureHeight * 3];
-			m_combinePictures(c->texture, p->texture, windows.back()->texture, 0.5f, c->textureWidth, c->textureHeight);
-			windows.back()->setTexture(c->textureWidth, c->textureHeight, windows.back()->texture);
-		}
-	}
+	//if (key == GLFW_KEY_C && action == GLFW_PRESS) {
+	//	if (previousWindow != NULL) {
+	//		My_window* p = previousWindow;
+	//		My_window* c = currentWindow;
+	//		m_newWindow();
+	//		windows.back()->texture = new float[c->textureWidth * c->textureHeight * 3];
+	//		m_combinePictures(c->texture, p->texture, windows.back()->texture, 0.5f, c->textureWidth, c->textureHeight);
+	//		windows.back()->setTexture(c->textureWidth, c->textureHeight, windows.back()->texture);
+	//	}
+	//}
 
-	if (key == GLFW_KEY_P && action == GLFW_PRESS) {
-		for (int i = 0; i < windows.size(); ++i) {
-			if (windows[i]->window == window) {
-				int wi = windows[i]->textureWidth;
-				int he = windows[i]->textureHeight;
-				if (windows[i]->texture == NULL) {
-					wi = 700;
-					he = 700;
-					windows[i]->texture = new float[wi*he * 3];
-				}
-				PerlinNoise pn(wi, he, 6);
-				pn.m_genPerlinNoise(windows[i]->texture, 3);
-				windows[i]->setTexture(wi, he, windows[i]->texture);
-				break;
-			}
-		}
-	}
+	//if (key == GLFW_KEY_P && action == GLFW_PRESS) {
+	//	for (int i = 0; i < windows.size(); ++i) {
+	//		if (windows[i]->window == window) {
+	//			int wi = windows[i]->textureWidth;
+	//			int he = windows[i]->textureHeight;
+	//			if (windows[i]->texture == NULL) {
+	//				wi = 700;
+	//				he = 700;
+	//				windows[i]->texture = new float[wi*he * 3];
+	//			}
+	//			PerlinNoise pn(wi, he, 6);
+	//			pn.m_genPerlinNoise(windows[i]->texture, 3);
+	//			windows[i]->setTexture(wi, he, windows[i]->texture);
+	//			break;
+	//		}
+	//	}
+	//}
 
-	if (key == GLFW_KEY_O && action == GLFW_PRESS) {
-		for (int i = 0; i < windows.size(); ++i) {
-			if (windows[i]->window == window) {
-				int wi = windows[i]->textureWidth;
-				int he = windows[i]->textureHeight;
-				if (windows[i]->texture == NULL) {
-					wi = 700;
-					he = 700;
-					windows[i]->texture = new float[wi*he * 3];
-				}
-				WorleyNoise pn(wi, he, 8, 6);
-				pn.m_genWorleyNoise(windows[i]->texture, 3);
-				windows[i]->setTexture(wi, he, windows[i]->texture);
-				break;
-			}
-		}
-	}
+	//if (key == GLFW_KEY_O && action == GLFW_PRESS) {
+	//	for (int i = 0; i < windows.size(); ++i) {
+	//		if (windows[i]->window == window) {
+	//			int wi = windows[i]->textureWidth;
+	//			int he = windows[i]->textureHeight;
+	//			if (windows[i]->texture == NULL) {
+	//				wi = 700;
+	//				he = 700;
+	//				windows[i]->texture = new float[wi*he * 3];
+	//			}
+	//			WorleyNoise pn(wi, he, 8, 6);
+	//			pn.m_genWorleyNoise(windows[i]->texture, 3);
+	//			windows[i]->setTexture(wi, he, windows[i]->texture);
+	//			break;
+	//		}
+	//	}
+	//}
 
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		closeProgram = true;
@@ -637,6 +630,9 @@ void window_close_callback(GLFWwindow* window) {
 	}
 	glfwDestroyWindow(window);
 }
+#pragma endregion
+
+#pragma region Texture
 
 int m_getTextureCoordinate(int width, int height, int x, int y) {
 	int textcoord = width * (height-y) - x;
@@ -1178,50 +1174,11 @@ void m_saveAsPNG(char* file_name, int width, int height, float *buffer, char* ti
 //
 //	png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
 //}
+#pragma endregion
 
 void m_genCube() {
 
 }
-
-//void m_genPlane(int x, int y, float* verts,unsigned int* indices, float* texcoord, float* normals) {
-//	int size = (x + 1) * (y + 1);
-//	int index = -1;
-//	int index2 = -1;
-//	for (int i = 0; i < y + 1; ++i) {
-//		for (int j = 0; j < x + 1; ++j) {
-//			verts[++index] = j;
-//			verts[++index] = i;
-//			verts[++index] = 0;
-//			texcoord[++index2] = j;
-//			texcoord[++index2] = i;
-//		}
-//	}
-//
-//	index = -1;
-//	index2 = -1;
-//	for (int i = 0; i < size; ++i) {
-//		verts[++index] /= x;
-//		normals[index] = 0.0f;
-//		verts[++index] /= x;
-//		normals[index] = 0.0f;
-//		verts[++index] /= x;
-//		normals[index] = -1.0f;
-//		texcoord[++index2] /= x;
-//		texcoord[++index2] /= x;
-//	}
-//
-//	index = -1;
-//	for (int i = 0; i < y; ++i) {
-//		for (int j = 0; j < x; ++j) {
-//			indices[++index] = j + i*(y+1);
-//			indices[++index] = j + 1 + (i + 1)*(y+1);
-//			indices[++index] = j + 1 + i*(y+1);
-//			indices[++index] = j + i*(y+1);
-//			indices[++index] = j + (i + 1)*(y+1);
-//			indices[++index] = j + 1 + (i + 1)*(y+1);
-//		}
-//	}
-//}
 
 Object3D* m_genPlane(int x, int y) {
 	Object3D* obj = new Object3D();
@@ -1248,67 +1205,6 @@ Object3D* m_genPlane(int x, int y) {
 	return obj;
 }
 
-GLuint setVAO() {
-
-	float vertices[] = {
-		//  Position      Color             Texcoords
-		-1.0f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Top-left
-		1.0f,  1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, // Top-right
-		-1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom-left
-		1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f  // Bottom-right
-	};
-
-	float normals[] = {
-		0.0f, 0.0f, -1.0f, // Top-left
-		0.0f, 0.0f, -1.0f, // Top-right
-		0.0f, 0.0f, -1.0f, // Bottom-right
-		0.0f, 0.0f, -1.0f // Bottom-left
-	};
-
-	//-1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Top-left
-	//	1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, // Top-right
-	//	-1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom-right
-	//	1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f  // Bottom-left
-
-	unsigned int indices[] = {
-		0, 1, 2, // first triangle
-		1, 2, 3  // second triangle
-	};
-
-	unsigned int VNO, VBO, VAO, EBO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VNO);
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
-
-	glBindVertexArray(VAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VNO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	// position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	// color attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(2 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	// texture coord attribute
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-	// normal attribute
-	glBindBuffer(GL_ARRAY_BUFFER, VNO);
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(3);
-
-	return VAO;
-}
-
 void m_newWindow() {
 	char* n = "window";
 	n += 'w';
@@ -1327,8 +1223,11 @@ int main()
 	//windows.push_back(w2);
 	glfwMakeContextCurrent(window->window);
 	currentWindow = window;
-	currentWindow->AddObject3D(m_genPlane(5, 5));
-	std::cout << currentWindow->obj3D[0]->tris.size() << "\n";
+	Object3D* o = m_genPlane(5, 5);
+	o->Scale(&float3(0.5, 0.5, 1));
+	o->positionFactor = &float3(0,0,0);
+	currentWindow->AddObject3D(o);
+	//currentWindow->AddObject3D(m_genPlane(5, 5));
 
 	const int wi = 700, he = 700;
 
@@ -1365,7 +1264,7 @@ int main()
 	//m_drawLine(f.c0.x, f.c0.y, f.c1.x, f.c1.y, pic, wi, he);
 	m_saveAsPNG("kuvaggg.png", wi, he, pic, "k");
 
-	window->setTexture(wi, he, pic);
+	currentWindow->setTexture(*o,wi, he, pic);
 	//w2->setTexture(wi, he, pic2);
 
 	do {

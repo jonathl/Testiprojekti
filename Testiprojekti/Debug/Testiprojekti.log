@@ -21,26 +21,25 @@ C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Noise.h(39
 C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Noise.h(392,70): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Noise.h(393,54): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Noise.h(393,44): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(514,21): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(421,20): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(504,21): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(513,21): warning C4018:  '<': signed/unsigned mismatch
 C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(523,21): warning C4018:  '<': signed/unsigned mismatch
 C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(533,21): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(543,21): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(564,21): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(582,21): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(618,21): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(629,20): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(904,10): warning C4244:  'initializing': conversion from 'int' to 'float', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(904,18): warning C4244:  'initializing': conversion from 'int' to 'float', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(914,57): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(914,54): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(931,57): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(931,54): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(947,64): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(947,59): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(963,64): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(963,59): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(1011,36): warning C4244:  'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(1011,90): warning C4244:  'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(1015,33): warning C4244:  'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(1326,12): warning C4244:  'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(608,21): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(619,20): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(897,10): warning C4244:  'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(897,18): warning C4244:  'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(907,57): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(907,54): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(924,57): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(924,54): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(940,64): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(940,59): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(956,64): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(956,59): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(1004,36): warning C4244:  'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(1004,90): warning C4244:  'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(1008,33): warning C4244:  'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(1219,12): warning C4244:  'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
   Testiprojekti.vcxproj -> C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Debug\Testiprojekti.exe
