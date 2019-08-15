@@ -471,6 +471,8 @@ public:
 	}
 };
 
+Object3D RayHitObject(My_window* w);
+
 double cursor_xpos, cursor_ypos;
 bool cursorLeftPressed = false;
 bool cursorRightPressed = false;
@@ -485,12 +487,14 @@ bool lineMode = false;
 #pragma region WindowCallbacks
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
-	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
 		cursorRightPressed = true;
+	}
 	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
 		cursorRightPressed = false;
 	}
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		RayHitObject(currentWindow);
 		cursorLeftPressed = true;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
@@ -1176,6 +1180,37 @@ void m_saveAsPNG(char* file_name, int width, int height, float *buffer, char* ti
 //}
 #pragma endregion
 
+Object3D RayHitObject(My_window* w) {
+	vec3 rayOrigin = w->worldSpaceCameraPos;
+	vec3 rayTarget = w->worldSpaceCameraTarget;
+	std::vector<Object3D*> hits;
+	for each (Object3D* o in w->obj3D)
+	{
+		for each  (Triangle* tri in o->bbtris)
+		{ //kato ettei oo saman suuntasii
+			float A = tri->normal.x;
+			float B = tri->normal.y;
+			float C = tri->normal.z;
+			vec3 normal = vec3(A, B, C);
+			vec3 vert = vec3(tri->corners[0].x, tri->corners[0].y, tri->corners[0].z);
+			if (dot(normal, rayTarget) != 0){
+				//distance
+				float dist = dot(normal, vert-rayOrigin) / dot(normal, rayTarget-rayOrigin);
+				vec3 hit = rayOrigin + (dist * (rayTarget-rayOrigin));
+				//is hit inside triangle
+				vec3 first = vec3(tri->corners[0].x, tri->corners[0].y, tri->corners[0].z);
+				vec3 second = vec3(tri->corners[1].x, tri->corners[1].y, tri->corners[1].z);
+				vec3 third = vec3(tri->corners[2].x, tri->corners[2].y, tri->corners[2].z);
+				if (dot(cross(second - first, hit - first), normal) >= 0 && dot(cross(third - second, hit - second), normal) >= 0 && dot(cross(first - third, hit - third), normal) >= 0) {
+					std::cout << "osuin\n";
+				}
+			}
+		}
+	}
+	Object3D k;
+	return k;
+}
+
 void m_genCube() {
 
 }
@@ -1192,7 +1227,7 @@ Object3D* m_genPlane(int x, int y) {
 			v->v = (float)i/ (float)(x-1);
 		}
 	}
-
+	//varmista et menee vastap‰iv‰‰n kolmion vertexit (ne n‰ytt‰‰ kyl menev‰n oikein)
 	index = -1;
 	for (int i = 0; i < y - 1; ++i) {
 		for (int j = 0; j < x - 1; ++j) {
@@ -1226,6 +1261,7 @@ int main()
 	Object3D* o = m_genPlane(5, 5);
 	o->Scale(&float3(0.5, 0.5, 1));
 	o->positionFactor = &float3(0,0,0);
+	o->BuildBoundingBox();
 	currentWindow->AddObject3D(o);
 	//currentWindow->AddObject3D(m_genPlane(5, 5));
 
@@ -1241,7 +1277,7 @@ int main()
 	clock_t begin = clock();
 	pn.m_genPerlinNoise(pic,3);
 	clock_t end = clock();
-	std::cout << double(end - begin) / CLOCKS_PER_SEC << "\n";
+	//std::cout << double(end - begin) / CLOCKS_PER_SEC << "\n";
 	/*m_saveAsPNG("perlin.png", wi, he, pic, "k");
 	m_addContrast(pic2, 0.2f, 0.3f, wi, he);
 	m_saveAsPNG("worley.png", wi, he, pic2, "k");
