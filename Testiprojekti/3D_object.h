@@ -1,5 +1,7 @@
 #pragma once
 #include <vector>
+#include <glm\glm.hpp>
+#include <glm\gtc\matrix_transform.hpp>
 
 
 
@@ -64,7 +66,7 @@ public:
 		normal.x = f.y * s.z - f.z * s.y;
 		normal.y = f.z * s.x - f.x * s.z;
 		normal.z = f.x * s.y - f.y * s.x;
-		std::cout << normal.x << " " << normal.y << " " << normal.z << "\n";
+		//std::cout << normal.x << " " << normal.y << " " << normal.z << "\n";
 	}
 
 };

@@ -19,6 +19,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Noise.h">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -27,8 +30,11 @@
     <None Include="VertexShader.vertexshader" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="3D_object.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -20,8 +20,8 @@
 #include <glm\glm.hpp>
 #include <glm\gtc\matrix_transform.hpp>
 
-#include "Noise.h"
 #include "3D_object.h"
+#include "Texture.h"
 
 #include <png.h>
 #include <zlib.h>
@@ -34,8 +34,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
 void m_newWindow();
-void m_combinePictures(float *pic1, float *pic2, float *texture, float str, int width, int height);
-void m_saveAsPNG(char* file_name, int width, int height, float *buffer, char* title);
 
 //void m_genPlane(int x, int y, float* verts, unsigned int* indices, float* texcoord, float* normals);
 Object3D* m_genPlane(int x, int y);
@@ -48,6 +46,8 @@ public:
 
 	#pragma region tyhmiiMuuttujii
 
+	int windowPixelSizeX = 724;
+	int windowPixelSizeY = 724;
 
 	glm::vec3 lightDirection;
 	glm::vec3 lightColor;
@@ -126,7 +126,7 @@ public:
 		glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
 		GLFWwindow* window = NULL;
-		window = glfwCreateWindow(724, 724, "Testiprojekti", NULL, NULL);
+		window = glfwCreateWindow(windowPixelSizeX, windowPixelSizeY, "Testiprojekti", NULL, NULL);
 		if (window == NULL) {
 			fprintf(stderr, "Failed to open GLFW window.\n");
 			glfwTerminate();
@@ -242,7 +242,7 @@ public:
 		worldSpaceCameraPos.z = -1.2f; //-1.2
 		worldSpaceCameraTarget.x = 0.5f;
 		worldSpaceCameraTarget.y = 0.5f;
-		worldSpaceCameraTarget.z = 1.0f;
+		worldSpaceCameraTarget.z = 0.0f;
 
 
 		View = glm::lookAt(
@@ -275,9 +275,9 @@ public:
 		specularColor.y = 1.0f;
 		specularColor.z = 1.0f;
 	}
-	void setTexture(Object3D o, int wi, int he, float* pic) {
+	/*void setTexture(Object3D o, int wi, int he, float* pic) {
 		o.SetTexture(wi, he, pic);
-		GLuint t; 
+		GLuint t;
 		glfwMakeContextCurrent(window);
 		glGenTextures(1, &t);
 		glBindTexture(GL_TEXTURE_2D, t);
@@ -287,6 +287,20 @@ public:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, o.textureWidth, o.textureHeight, 0, GL_RGB, GL_FLOAT, o.texture);
+		tex.push_back(t);
+	}*/
+	void setTexture(Object3D o, Texture texture) {
+		//o.SetTexture();
+		GLuint t; 
+		glfwMakeContextCurrent(window);
+		glGenTextures(1, &t);
+		glBindTexture(GL_TEXTURE_2D, t);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture.width, texture.height, 0, GL_RGBA, GL_FLOAT, texture.pic);
 		tex.push_back(t);
 	}
 	GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path) {
@@ -636,571 +650,38 @@ void window_close_callback(GLFWwindow* window) {
 }
 #pragma endregion
 
-#pragma region Texture
-
-int m_getTextureCoordinate(int width, int height, int x, int y) {
-	int textcoord = width * (height-y) - x;
-	//std::cout << "texcoord = " << textcoord << "\n";
-	return textcoord;
-}
-
-void m_updateTexture(GLuint tex, float *texture, int width, int height) {
-	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, texture);
-}
-
-void m_drawToTexture(GLuint tex,float *texture, int width, int height) { //korjaa reunan yli piirtäminen ja textuurin ko-on vaikuttaminen
-	float color[] = { 1.0f, 0.0f, 0.0f };
-	int index = m_getTextureCoordinate(width, height, (int)cursor_xpos, (int)cursor_ypos) * 3;
-	texture[index] = color[0];
-	texture[++index] = color[1];
-	texture[++index] = color[2];
-	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, texture);
-}
-
-void m_colorAdjacent(float *color, float *fillcolor, int texel, float *texture, int width, int height) { //poista recursio, stackki täyttyy
-	if ((color[0] != fillcolor[0]) && (color[1] != fillcolor[1]) && (color[2] != fillcolor[2])) {
-		texture[texel] = fillcolor[0];
-		texture[texel+1] = fillcolor[1];
-		texture[texel+2] = fillcolor[2];
-		if (texel > width * 3) { //up
-			m_colorAdjacent(color, fillcolor, texel - width*3, texture, width, height);
-		}
-		if (texel % (width * 3) != 0) { //left
-			m_colorAdjacent(color, fillcolor, texel - 3, texture, width, height);
-		}
-		if (texel % (width * 3) != (width * 3) - 1) { //right
-			m_colorAdjacent(color, fillcolor, texel + 3, texture, width, height);
-		}
-		if (texel < width * 3 * (height-1)) { //down
-			m_colorAdjacent(color, fillcolor, texel + width*3, texture, width, height);
-		}
-	}
-}
-
-void m_bucketToolTexture(GLuint tex, float *texture, int width, int height) {
-	float fillcolor[] = { 1.0f, 1.0f, 1.0f };
-	int index = m_getTextureCoordinate(width, height, (int)cursor_xpos, (int)cursor_ypos) * 3;
-	float color[] = { texture[index], texture[index+1], texture[index+2] };// onnistuu ylittämään max arvon??
-	m_colorAdjacent(color, fillcolor, index, texture, width, height);
-	m_updateTexture(tex, texture, width, height);
-}
-
-void m_bucketToolTexture2(GLuint tex, float *texture, int width, int height) {
-	float fillcolor[] = { 1.0f, 1.0f, 1.0f };
-	int o = m_getTextureCoordinate(width, height, (int)cursor_xpos, (int)cursor_ypos) * 3;
-	int index = o;
-	int oy = o;
-	float color[] = { texture[index], texture[index + 1], texture[index + 2] };
-
-	while ((texture[index] != fillcolor[0]) && (texture[index + 1] != fillcolor[1]) && (texture[index + 2] != fillcolor[2])) { //vertaa coloriin
-		while ((texture[index] != fillcolor[0]) && (texture[index + 1] != fillcolor[1]) && (texture[index + 2] != fillcolor[2])) {
-			texture[index] = fillcolor[0];
-			texture[index + 1] = fillcolor[1];
-			texture[index + 2] = fillcolor[2];
-			index += 3;
-		}
-		oy += width * 3;
-		index = oy;
-	}
-	
-	m_updateTexture(tex, texture, width, height);
-}
-
-//GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path) {
-//
-//	// Create the shaders
-//	GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-//	GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-//
-//	// Read the Vertex Shader code from the file
-//	std::string VertexShaderCode;
-//	std::ifstream VertexShaderStream(vertex_file_path, std::ios::in);
-//	if (VertexShaderStream.is_open()) {
-//		std::stringstream sstr;
-//		sstr << VertexShaderStream.rdbuf();
-//		VertexShaderCode = sstr.str();
-//		VertexShaderStream.close();
-//	}
-//	else {
-//		printf("Impossible to open %s. Are you in the right directory ? Don't forget to read the FAQ !\n", vertex_file_path);
-//		getchar();
-//		return 0;
-//	}
-//
-//	// Read the Fragment Shader code from the file
-//	std::string FragmentShaderCode;
-//	std::ifstream FragmentShaderStream(fragment_file_path, std::ios::in);
-//	if (FragmentShaderStream.is_open()) {
-//		std::stringstream sstr;
-//		sstr << FragmentShaderStream.rdbuf();
-//		FragmentShaderCode = sstr.str();
-//		FragmentShaderStream.close();
-//	}
-//
-//	GLint Result = GL_FALSE;
-//	int InfoLogLength;
-//
-//	// Compile Vertex Shader
-//	printf("Compiling shader : %s\n", vertex_file_path);
-//	char const * VertexSourcePointer = VertexShaderCode.c_str();
-//	glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
-//	glCompileShader(VertexShaderID);
-//
-//	// Check Vertex Shader
-//	glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
-//	glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-//	if (InfoLogLength > 0) {
-//		std::vector<char> VertexShaderErrorMessage(InfoLogLength + 1);
-//		glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
-//		printf("%s\n", &VertexShaderErrorMessage[0]);
-//	}
-//
-//	// Compile Fragment Shader
-//	printf("Compiling shader : %s\n", fragment_file_path);
-//	char const * FragmentSourcePointer = FragmentShaderCode.c_str();
-//	glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
-//	glCompileShader(FragmentShaderID);
-//
-//	// Check Fragment Shader
-//	glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
-//	glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-//	if (InfoLogLength > 0) {
-//		std::vector<char> FragmentShaderErrorMessage(InfoLogLength + 1);
-//		glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
-//		printf("%s\n", &FragmentShaderErrorMessage[0]);
-//	}
-//
-//	// Link the program
-//	printf("Linking program\n");
-//	GLuint ProgramID = glCreateProgram();
-//	glAttachShader(ProgramID, VertexShaderID);
-//	glAttachShader(ProgramID, FragmentShaderID);
-//	glLinkProgram(ProgramID);
-//
-//	// Check the program
-//	glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
-//	glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-//	if (InfoLogLength > 0) {
-//		std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
-//		glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
-//		printf("%s\n", &ProgramErrorMessage[0]);
-//	}
-//
-//	glDetachShader(ProgramID, VertexShaderID);
-//	glDetachShader(ProgramID, FragmentShaderID);
-//
-//	glDeleteShader(VertexShaderID);
-//	glDeleteShader(FragmentShaderID);
-//
-//	return ProgramID;
-//}
-
-//GLFWwindow* InitWindow()
-//{
-//	if (!glfwInit())
-//	{
-//		fprintf(stderr, "GLFW failed!\n");
-//		return NULL;
-//	}
-//
-//	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-//	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-//	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-//	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-//
-//	GLFWwindow* window = NULL;
-//	window = glfwCreateWindow(724, 724, "Testiprojekti", NULL, NULL);
-//	if (window == NULL) {
-//		fprintf(stderr, "Failed to open GLFW window.\n");
-//		glfwTerminate();
-//		return NULL;
-//	}
-//
-//	glfwMakeContextCurrent(window);
-//
-//	if (glewInit() != GLEW_OK) {
-//		fprintf(stderr, "Failed to initialize GLEW\n");
-//		getchar();
-//		glfwTerminate();
-//		return NULL;
-//	}
-//
-//	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-//	return window;
-//}
-
-void m_genOneColorTex(int width, int height, float *texture, float r, float g, float b) {
-	int index = -1;
-	for (int i = 0; i < height; ++i) {
-		for (int j = 0; j < width; ++j) {
-			texture[++index] = r;
-			texture[++index] = g;
-			texture[++index] = b;
-		}
-	}
-}
-
-void m_genCheckerboardTex(int width, int height, float *texture) {
-	int state = 1;
-	int others = 1;
-	int index = 0;
-	for (int i = 0; i < height; ++i) {
-		for (int j = 0; j < width; ++j) {
-			if (state == others) {
-				texture[index] = 1.0f;
-				texture[index+1] = 1.0f;
-				texture[index+2] = 1.0f;
-				index += 3;
-			}
-			else {
-				texture[index] = 0.0f;
-				texture[index + 1] = 0.0f;
-				texture[index + 2] = 0.0f;
-				index += 3;
-			}
-			state *= -1;
-		}
-		others *= -1;
-	}
-}
-
-void m_drawGridOnTex(int width, int height, int gridsize, float *texture) {
-	int index = 0;
-	for (int i = 0; i < height; ++i) {
-		for (int j = 0; j < width; ++j) {
-			if (j % gridsize == 0 || i % gridsize == 0) {
-				texture[index] = 1.0f;
-				texture[index + 1] = 0.2f;
-				texture[index + 2] = 0.7f;
-			}
-			index += 3;
-		}
-	}
-}
-
-void m_drawLine(int x0, int y0, int x1, int y1, float *texture, int width, int height) {
-
-	int index2 = m_getTextureCoordinate(width, height, x1, y1) * 3;
-	texture[index2] = 1.0f;
-	texture[index2+ 1] = 0.2f;
-	texture[index2 + 2] = 0.4f;
-	index2 = m_getTextureCoordinate(width, height, x0, y0) * 3;
-	texture[index2] = 1.0f;
-	texture[index2 + 1] = 0.2f;
-	texture[index2 + 2] = 0.4f;
-
-
-	int y2 = y1 - y0;
-	int x2 = x1 - x0;
-	float a = (float)y2 / (float)x2; //y = ax + b
-	float b = y0 - a * x0;
-	int m = 1;
-	int i = 0;
-	float x = x0, y = y0;
-	if (x2 == 0) { //x0 = x1
-		if (y2 < 0) {
-			m = -1;
-		}
-		while ((round(x) != x1 || round(y) != y1))
-		{
-			if (i != 0) {
-				y += 1 * m;
-			}
-			int index = m_getTextureCoordinate(width, height, x, y) * 3;
-			texture[index] = 1.0f;
-			texture[index + 1] = 0.2f;
-			texture[index + 2] = 0.4f;
-			++i;
-		}
-	} 
-
-	else if (y2 == 0) { //y0 = y1
-		if (x2 < 0) {
-			m = -1;
-		}
-		while ((round(x) != x1 || round(y) != y1))
-		{
-			if (i != 0) {
-				x += 1*m;
-			}
-			int index = m_getTextureCoordinate(width, height, x, y) * 3;
-			texture[index] = 1.0f;
-			texture[index + 1] = 0.2f;
-			texture[index + 2] = 0.4f;
-			++i;
-		}
-	}
-
-	else if (a <= 1 && a >= -1) {
-		if (x2 < 0) {
-			m = -1;
-		}
-		while((round(x) != x1 || round(y) != y1))
-		{
-			x += 1 * m;
-			y = roundf(a * x + b);
-			int index = m_getTextureCoordinate(width, height, round(x), y) *3;
-			texture[index] = 1.0f;
-			texture[index + 1] = 0.2f;
-			texture[index + 2] = 0.4f;
-			++i;
-		}
-	}
-
-	else {
-		if (y2 < 0) {
-			m = -1;
-		}
-		while ((round(x) != x1 || round(y) != y1))
-		{
-			y += 1 * m;
-			x = roundf((y - b)/a);
-			int index = m_getTextureCoordinate(width, height, round(x), y) * 3;
-			texture[index] = 1.0f;
-			texture[index + 1] = 0.2f;
-			texture[index + 2] = 0.4f;
-			++i;
-		}
-	}
-}
-
-void m_drawLine(int2 c0, int2 c1, float *texture, int width, int height) {
-	m_drawLine(c0.x, c0.y, c1.x, c1.y, texture, width, height);
-}
-
-void m_drawFractal(FractalLine f, float *texture, int width, int height) {
-	if (f.fl.empty()) {
-		m_drawLine(f.c0, f.c1, texture, width, height);
-	}
-	else {
-		for each(FractalLine* fra in f.fl) {
-			m_drawFractal(*fra, texture, width, height);
-		}
-	}
-}
-
-void m_combinePictures(float *pic1, float *pic2, float *texture, float str, int width, int height) {
-	for (int i = 0; i < height*width * 3; ++i)
-	{
-		texture[i] = pic1[i] + str * (pic2[i] - pic1[i]);
-	}
-	/*int index = -1;
-	for (int i = 0; i < height; ++i) {
-		for (int j = 0; j < width; ++j) {
-			texture[++index] = pic1[++index] + str * (pic2[++index] - pic1[++index]);
-			texture[++index] = pic1[++index] + str * (pic2[++index] - pic1[++index]);
-			texture[++index] = pic1[++index] + str * (pic2[++index] - pic1[++index]);
-		}
-	}*/
-}
-
-float m_changeScale(float oldmin, float oldmax, float newmin, float newmax, float value) {
-	float p = (value - oldmin) / (oldmax - oldmin);
-	return p * (newmax - newmin) + newmin;
-}
-
-void m_addContrast(float *texture, float str, float displacement, int width, int height) {
-	if (str == 0) {
-		return;
-	}
-	float min = atanf(2 * 3.141 * str * (-0.5 + displacement)), max = atanf(2 * 3.141 * str *  (0.5 + displacement));
-	float value;
-	for (int i = 0; i < height*width * 3; ++i)
-	{
-		value = atanf(2 * 3.141 * str * (texture[i] - 0.5 + displacement));
-		texture[i] = m_changeScale(min, max, 0, 1, value);
-	}
-}
-
-//void m_genRandomNoise(int width, int height, float *texture) {
-//	int index = -1;
-//	float r_value;
-//	for (int i = 0; i < height; ++i) {
-//		for (int j = 0; j < width; ++j) {
-//			r_value = float(rand() % 100)/100;
-//			texture[++index] = r_value;
-//			texture[++index] = r_value;
-//			texture[++index] = r_value;
-//		}
-//	}
-//}
-
-
-void write_row_callback(png_structp png_ptr, png_uint_32 row, int pass){
-	//std::cout << row <<"\n";
-}
-
-void m_saveAsPNG(char* file_name, int width, int height, float *buffer, char* title) {
-	png_structp png_ptr = NULL;
-	png_infop info_ptr = NULL;
-	png_bytep row = NULL;
-	FILE *fp = fopen(file_name, "wb");
-	if (!fp) {
-		std::printf("[write_png_file] File %s could not be opened for writing", file_name);
-		return;
-	}
-
-	png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-	if (png_ptr == NULL) {
-		printf("Could not allocate write struct\n");
-		return;
-	}
-
-	info_ptr = png_create_info_struct(png_ptr);
-	if (info_ptr == NULL) {
-		printf("Could not allocate info struct\n");
-		return;
-	}
-
-	if (setjmp(png_jmpbuf(png_ptr))) {
-		printf("Error during png creation\n");
-		fclose(fp);
-		png_destroy_write_struct(&png_ptr, &info_ptr);
-		return;
-	}
-
-	png_init_io(png_ptr, fp);
-
-	png_set_write_status_fn(png_ptr, write_row_callback);
-
-	// Write header (8 bit colour depth)
-	png_set_IHDR(png_ptr, info_ptr, width, height,
-		8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
-		PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-
-	// Set title
-	if (title != NULL) {
-		png_text title_text;
-		title_text.compression = PNG_TEXT_COMPRESSION_NONE;
-		title_text.key = "Title";
-		title_text.text = title;
-		png_set_text(png_ptr, info_ptr, &title_text, 1);
-	}
-	png_write_info(png_ptr, info_ptr);
-
-
-	// Allocate memory for one row (3 bytes per pixel - RGB)
-	row = (png_bytep)malloc(3 * width * sizeof(png_byte));
-
-	// Write image data
-	int x, y;
-	for (y = 0; y<height; ++y) {
-		for (x = 0; x<width; ++x) {
-			int i = x * 3;
-			row[i] = png_byte(int(buffer[y * width * 3 + i] * 255));
-			row[i+1] = png_byte(int(buffer[y * width * 3 + i+1] * 255));
-			row[i+2] = png_byte(int(buffer[y * width * 3 + i+2] * 255));
-		}
-		png_write_row(png_ptr, row);
-		//rows[y] = row;
-	}
-	//png_write_image(png_ptr, rows);
-	// End write
-	png_write_end(png_ptr, NULL);
-
-	if (fp != NULL) fclose(fp);
-	if (info_ptr != NULL) png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
-	if (png_ptr != NULL) png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
-	if (row != NULL) free(row);
-}
-
-//void m_readPNG_image() {
-//	png_image image;
-//	memset(&image, 0, (sizeof image));
-//	image.version = PNG_IMAGE_VERSION;
-//	if (png_image_begin_read_from_file(&image, "helmet_kawaii.png") != 0) {
-//		png_bytep buffer;
-//		image.format = PNG_FORMAT_RGBA;
-//		buffer = (png_bytep)malloc(PNG_IMAGE_SIZE(image));
-//		if (buffer != NULL && png_image_finish_read(&image, NULL, buffer, 0, NULL) != 0) {
-//			if (png_image_write_to_file(&image, "kuva1.png", 0, buffer, 0, NULL) != 0) {
-//				std::cout << "we did it \n";
-//			}
-//		}
-//		else {
-//			if (buffer == NULL) {
-//				png_image_free(&image);
-//			}
-//			else {
-//				free(buffer);
-//			}
-//		}
-//	}
-//}
-
-//void m_readPNG(char* file_name, png_structp png_ptr, png_infop info_ptr, png_bytepp row_pointers) {
-//	FILE *fp = fopen(file_name, "rb");
-//	if (!fp) {
-//		return;
-//	}
-//	unsigned char header[9];
-//	int number_to_check = 8;
-//	fread(header, 1, number_to_check, fp);
-//	int is_png = !png_sig_cmp(header, 0, 8);
-//	if (!is_png) {
-//		return;
-//	}
-//
-//	png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-//	if (!png_ptr) {
-//		return;
-//	}
-//	info_ptr = png_create_info_struct(png_ptr);
-//	if (!info_ptr) {
-//		png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
-//	}
-//	png_infop end_info = png_create_info_struct(png_ptr);
-//	if (!end_info) {
-//		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
-//	}
-//	png_init_io(png_ptr, fp);
-//
-//	png_set_sig_bytes(png_ptr, number_to_check);
-//
-//	png_read_info(png_ptr, info_ptr);
-//	png_uint_32 width, height;
-//	int bit_depth, color_type, interlace_type, compression_type, filter_method;
-//	png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, &interlace_type, NULL, NULL);
-//
-//	row_pointers = (png_bytepp)png_malloc(png_ptr, sizeof(png_bytepp) * height);
-//	for (int i = 0; i < height; i++) {
-//		row_pointers[i] = (png_bytep)png_malloc(png_ptr, width * sizeof(png_bytep));
-//	}
-//
-//	png_set_rows(png_ptr, info_ptr, row_pointers);
-//	
-//	png_read_image(png_ptr, row_pointers);
-//	png_read_end(png_ptr, end_info);
-//
-//	std::cout << (int)row_pointers[1][1] << "\n";
-//
-//	png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-//}
-#pragma endregion
 
 Object3D RayHitObject(My_window* w) {
 	vec3 rayOrigin = w->worldSpaceCameraPos;
 	vec3 rayTarget = w->worldSpaceCameraTarget;
+	glfwGetCursorPos(currentWindow->window, &cursor_xpos, &cursor_ypos);
+	float rayDisplace = 0.5;
+	rayTarget.x += rayDisplace * ((cursor_xpos / w->windowPixelSizeX) - 0.5) * 2;
+	rayTarget.y += rayDisplace * ((cursor_ypos / w->windowPixelSizeY) - 0.5) * 2;
+	/*rayOrigin.x += rayTarget.x;
+	rayOrigin.y += rayTarget.y;*/
+	std::cout << rayTarget.x <<" "<< rayTarget.y << "\n";
 	std::vector<Object3D*> hits;
 	for each (Object3D* o in w->obj3D)
 	{
 		for each  (Triangle* tri in o->bbtris)
-		{ //kato ettei oo saman suuntasii
+		{
+			//bounding box scalee väärin (skaalaantuu 0,0 mukaan)
 			float A = tri->normal.x;
 			float B = tri->normal.y;
 			float C = tri->normal.z;
 			vec3 normal = vec3(A, B, C);
-			vec3 vert = vec3(tri->corners[0].x, tri->corners[0].y, tri->corners[0].z);
+			mat4 model = w->Models.back();
+			vec3 vert = w->View * model * vec4(tri->corners[0].x, tri->corners[0].y, tri->corners[0].z,1);
+			//kattoo ettei oo säteen kans saman suuntaiset
 			if (dot(normal, rayTarget) != 0){
 				//distance
 				float dist = dot(normal, vert-rayOrigin) / dot(normal, rayTarget-rayOrigin);
 				vec3 hit = rayOrigin + (dist * (rayTarget-rayOrigin));
 				//is hit inside triangle
-				vec3 first = vec3(tri->corners[0].x, tri->corners[0].y, tri->corners[0].z);
-				vec3 second = vec3(tri->corners[1].x, tri->corners[1].y, tri->corners[1].z);
-				vec3 third = vec3(tri->corners[2].x, tri->corners[2].y, tri->corners[2].z);
+				vec3 first = model * vec4(tri->corners[0].x, tri->corners[0].y, tri->corners[0].z, 1);
+				vec3 second = model * vec4(tri->corners[1].x, tri->corners[1].y, tri->corners[1].z, 1);
+				vec3 third = model * vec4(tri->corners[2].x, tri->corners[2].y, tri->corners[2].z, 1);
 				if (dot(cross(second - first, hit - first), normal) >= 0 && dot(cross(third - second, hit - second), normal) >= 0 && dot(cross(first - third, hit - third), normal) >= 0) {
 					std::cout << "osuin\n";
 				}
@@ -1211,8 +692,44 @@ Object3D RayHitObject(My_window* w) {
 	return k;
 }
 
-void m_genCube() {
+Object3D* m_genCube(glm::vec3 minCoord, glm::vec3 maxCoord) { //UV:t puuttuu
+	Object3D* obj = new Object3D();
+	bool values = false;
+	float tx, ty, tz;
+	for (int z = 0; z <= 1; ++z) {
+		tz = minCoord.z;
+		for (int y = 0; y <= 1; ++y) {
+			ty = minCoord.y;
+			for (int x = 0; x <= 1; ++x) {
+				tx = minCoord.x;
+				if (x == 1) {
+					tx = maxCoord.x;
+				}
+				if (y == 1) {
+					ty = maxCoord.y;
+				}
+				if (z == 1) {
+					tz = maxCoord.z;
+				}
+				obj->verts.push_back(new Vertex(obj->verts.size(), tx, ty, tz));
+			}
+		}
+	}
+	//counterclockvice
+	obj->tris.push_back(new Triangle(*obj->verts[0], *obj->verts[1], *obj->verts[3]));
+	obj->tris.push_back(new Triangle(*obj->verts[0], *obj->verts[4], *obj->verts[1]));
+	obj->tris.push_back(new Triangle(*obj->verts[0], *obj->verts[3], *obj->verts[2]));
+	obj->tris.push_back(new Triangle(*obj->verts[0], *obj->verts[2], *obj->verts[4]));
+	obj->tris.push_back(new Triangle(*obj->verts[1], *obj->verts[7], *obj->verts[3]));
+	obj->tris.push_back(new Triangle(*obj->verts[1], *obj->verts[4], *obj->verts[5]));
+	obj->tris.push_back(new Triangle(*obj->verts[1], *obj->verts[5], *obj->verts[7]));
+	obj->tris.push_back(new Triangle(*obj->verts[2], *obj->verts[3], *obj->verts[7]));
+	obj->tris.push_back(new Triangle(*obj->verts[2], *obj->verts[6], *obj->verts[4]));
+	obj->tris.push_back(new Triangle(*obj->verts[2], *obj->verts[7], *obj->verts[6]));
+	obj->tris.push_back(new Triangle(*obj->verts[4], *obj->verts[6], *obj->verts[5]));
+	obj->tris.push_back(new Triangle(*obj->verts[5], *obj->verts[6], *obj->verts[7]));
 
+	return obj;
 }
 
 Object3D* m_genPlane(int x, int y) {
@@ -1259,35 +776,26 @@ int main()
 	glfwMakeContextCurrent(window->window);
 	currentWindow = window;
 	Object3D* o = m_genPlane(5, 5);
-	o->Scale(&float3(0.5, 0.5, 1));
-	o->positionFactor = &float3(0,0,0);
+	//o->Scale(&float3(0.5, 0.5, 1));
+	o->positionFactor = &float3(0,0,1);
 	o->BuildBoundingBox();
 	currentWindow->AddObject3D(o);
 	//currentWindow->AddObject3D(m_genPlane(5, 5));
 
 	const int wi = 700, he = 700;
 
-	float* pic = new float[wi*he * 3];
-	float* pic2 = new float[wi*he * 3];
+	//PerlinNoise pn(wi, he, 6);
+	//WorleyNoise wn(wi, he, 8, 5);
 
-	PerlinNoise pn(wi, he, 6);
-	WorleyNoise wn(wi, he, 8, 5);
-
-	wn.m_genWorleyNoise(pic2, 4);
-	clock_t begin = clock();
-	pn.m_genPerlinNoise(pic,3);
-	clock_t end = clock();
+	//wn.m_genWorleyNoise(pic2, 4);
+	//clock_t begin = clock();
+	//pn.m_genPerlinNoise(pic,3);
+	//clock_t end = clock();
 	//std::cout << double(end - begin) / CLOCKS_PER_SEC << "\n";
-	/*m_saveAsPNG("perlin.png", wi, he, pic, "k");
-	m_addContrast(pic2, 0.2f, 0.3f, wi, he);
-	m_saveAsPNG("worley.png", wi, he, pic2, "k");
-	m_combinePictures(pic, pic2, pic, 0.4f, wi, he);*/
 
-	m_genOneColorTex(wi, he, pic, 0.7f, 0.7f, 0.9f);
-	//m_drawGridOnTex(wi, he, 125, pic);
-	FractalLine f(200, 200, 500, 200);
-	f.addLine(500, 500);
-	f.addLine(200, 500);
+	//FractalLine f(200, 200, 500, 200);
+	//f.addLine(500, 500);
+	//f.addLine(200, 500);
 	//int2 coor[] = { int2(200,500) };
 	//f.addLines(coor, 1);
 	//f.closeLines();
@@ -1296,11 +804,12 @@ int main()
 	//	f.iterFractal();
 	//}
 	////f.printPoints();
-	m_drawFractal(f, pic, wi, he);
+	//m_drawFractal(f, pic, wi, he);
 	//m_drawLine(f.c0.x, f.c0.y, f.c1.x, f.c1.y, pic, wi, he);
-	m_saveAsPNG("kuvaggg.png", wi, he, pic, "k");
-
-	currentWindow->setTexture(*o,wi, he, pic);
+	//m_saveAsPNG("kuvaggg.png", wi, he, pic, "k");
+	Texture tex = Texture(wi, he);
+	tex.GenRandomNoiseColor();
+	currentWindow->setTexture(*o, tex);
 	//w2->setTexture(wi, he, pic2);
 
 	do {
