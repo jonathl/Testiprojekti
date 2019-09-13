@@ -120,7 +120,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="3D_object.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Noise.cpp" />
     <ClCompile Include="Noise.h" />
     <ClCompile Include="Texture.cpp" />
   </ItemGroup>

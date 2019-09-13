@@ -175,15 +175,15 @@ public:
 		int index = -1;
 		int index2 = -1;
 		for (int i = 0; i < size; ++i) {
-			float3 vert = float3(obj3D.back()->verts[i]->x, obj3D.back()->verts[i]->y, obj3D.back()->verts[i]->z);
+			glm::vec3 vert = obj3D.back()->verts[i]->pos;
 			vertices[++index] = vert.x; 
 			normals[index] = 1;
 			vertices[++index] = vert.y;
 			normals[index] = 1;
 			vertices[++index] = vert.z; 
 			normals[index] = 1;
-			texcoord[++index2] = obj3D.back()->verts[i]->u;
-			texcoord[++index2] = obj3D.back()->verts[i]->v;
+			texcoord[++index2] = obj3D.back()->verts[i]->uvw.x;
+			texcoord[++index2] = obj3D.back()->verts[i]->uvw.y;
 		}
 		index = -1;
 		for (int i = 0; i < indicesSize / 3; ++i) {
@@ -530,7 +530,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_0 && action == GLFW_PRESS) {
 		for (int i = 0; i < windows.size(); ++i) {
 			if (windows[i]->window == window) {
-				windows[i]->obj3D.back()->AddScale(float3(0.05f,0.05f,0));
+				windows[i]->obj3D.back()->AddScale(glm::vec3(0.05f,0.05f,0));
 				windows[i]->SetModelMatrix(1);
 				break;
 			}
@@ -540,7 +540,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_9 && action == GLFW_PRESS) {
 		for (int i = 0; i < windows.size(); ++i) {
 			if (windows[i]->window == window) {
-				windows[i]->obj3D.back()->DecScale(float3(0.05f, 0.05f, 0));
+				windows[i]->obj3D.back()->DecScale(glm::vec3(0.05f, 0.05f, 0));
 				windows[i]->SetModelMatrix(1);
 				break;
 			}
@@ -672,16 +672,16 @@ Object3D RayHitObject(My_window* w) {
 			float C = tri->normal.z;
 			vec3 normal = vec3(A, B, C);
 			mat4 model = w->Models.back();
-			vec3 vert = w->View * model * vec4(tri->corners[0].x, tri->corners[0].y, tri->corners[0].z,1);
+			vec3 vert = w->View * model * vec4(tri->corners[0].pos,1);
 			//kattoo ettei oo säteen kans saman suuntaiset
 			if (dot(normal, rayTarget) != 0){
 				//distance
 				float dist = dot(normal, vert-rayOrigin) / dot(normal, rayTarget-rayOrigin);
 				vec3 hit = rayOrigin + (dist * (rayTarget-rayOrigin));
 				//is hit inside triangle
-				vec3 first = model * vec4(tri->corners[0].x, tri->corners[0].y, tri->corners[0].z, 1);
-				vec3 second = model * vec4(tri->corners[1].x, tri->corners[1].y, tri->corners[1].z, 1);
-				vec3 third = model * vec4(tri->corners[2].x, tri->corners[2].y, tri->corners[2].z, 1);
+				vec3 first = model * vec4(tri->corners[0].pos, 1);
+				vec3 second = model * vec4(tri->corners[1].pos, 1);
+				vec3 third = model * vec4(tri->corners[2].pos, 1);
 				if (dot(cross(second - first, hit - first), normal) >= 0 && dot(cross(third - second, hit - second), normal) >= 0 && dot(cross(first - third, hit - third), normal) >= 0) {
 					std::cout << "osuin\n";
 				}
@@ -740,8 +740,8 @@ Object3D* m_genPlane(int x, int y) {
 	for (int i = 0; i < y ; ++i) {
 		for (int j = 0; j < x; ++j) {
 			Vertex* v = obj->AddVertex((float)j/ (float)(x-1), (float)i/ (float)(x-1), 0);
-			v->u = (float)j/ (float)(x -1);
-			v->v = (float)i/ (float)(x-1);
+			v->uvw.x = (float)j/ (float)(x -1);
+			v->uvw.y = (float)i/ (float)(x-1);
 		}
 	}
 	//varmista et menee vastapäivään kolmion vertexit (ne näyttää kyl menevän oikein)
@@ -777,7 +777,7 @@ int main()
 	currentWindow = window;
 	Object3D* o = m_genPlane(5, 5);
 	//o->Scale(&float3(0.5, 0.5, 1));
-	o->positionFactor = &float3(0,0,1);
+	*o->positionFactor = vec3(0,0,0);
 	o->BuildBoundingBox();
 	currentWindow->AddObject3D(o);
 	//currentWindow->AddObject3D(m_genPlane(5, 5));
@@ -808,7 +808,8 @@ int main()
 	//m_drawLine(f.c0.x, f.c0.y, f.c1.x, f.c1.y, pic, wi, he);
 	//m_saveAsPNG("kuvaggg.png", wi, he, pic, "k");
 	Texture tex = Texture(wi, he);
-	tex.GenRandomNoiseColor();
+	//tex.GenRandomNoiseColor();
+	tex.GenPerlinNoise();
 	currentWindow->setTexture(*o, tex);
 	//w2->setTexture(wi, he, pic2);
 

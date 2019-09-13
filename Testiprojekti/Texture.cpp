@@ -242,7 +242,7 @@ void Texture::DrawLine(int x0, int y0, int x1, int y1) {
 	}
 }
 
-void Texture::DrawLine(int2 c0, int2 c1) {
+void Texture::DrawLine(glm::vec3 c0, glm::vec3 c1) {
 	DrawLine(c0.x, c0.y, c1.x, c1.y);
 }
 
@@ -257,7 +257,6 @@ void Texture::DrawFractal(FractalLine f) {
 	}
 }
 
-//vaihda k‰ytt‰‰ texturee
 void Texture::CombinePictures(Texture texture, Texture* rtex, float str) {
 	for (int i = 0; i < texelCount * 4; ++i)
 	{
@@ -319,6 +318,16 @@ void Texture::GenRandomNoiseColor() {
 			pic[++index] = 1.0f;
 		}
 	}
+}
+
+void Texture::GenPerlinNoise()
+{
+	//PerlinNoise p(width, height, 6);
+	//p.GenPerlinNoise(pic, 3);
+}
+
+void Texture::GenWorleyNoise()
+{
 }
 
 

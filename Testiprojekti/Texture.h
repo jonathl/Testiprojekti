@@ -38,12 +38,14 @@ public:
 	void DrawGridOnTex(int gridsize);
 	void DrawGridOnTex(int gridsize, float r, float g, float b);
 	void DrawLine(int x0, int y0, int x1, int y1);
-	void DrawLine(int2 c0, int2 c1);
+	void DrawLine(glm::vec3 c0, glm::vec3 c1);
 	void DrawFractal(FractalLine f);
 	void CombinePictures(Texture texture, Texture* rtex, float str);
 	void AddContrast(float str, float displacement);
 	void GenRandomNoise();
 	void GenRandomNoiseColor();
+	void GenPerlinNoise();
+	void GenWorleyNoise();
 	void SaveAsPNG(char* file_name, float* buffer, char* title);
 };
 
@@ -53,5 +55,5 @@ public:
 	unsigned int height;
 	unsigned int depth;
 	unsigned int texelCount;
-	Texture* texture;
+	float* pic;
 };
