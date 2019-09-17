@@ -38,7 +38,7 @@ public:
 	void DrawGridOnTex(int gridsize);
 	void DrawGridOnTex(int gridsize, float r, float g, float b);
 	void DrawLine(int x0, int y0, int x1, int y1);
-	void DrawLine(glm::vec3 c0, glm::vec3 c1);
+	void DrawLine(glm::vec3 c0, glm::vec3 c1, bool texcoord = false);
 	void DrawFractal(FractalLine f);
 	void CombinePictures(Texture texture, Texture* rtex, float str);
 	void AddContrast(float str, float displacement);
@@ -56,4 +56,10 @@ public:
 	unsigned int depth;
 	unsigned int texelCount;
 	float* pic;
+
+	Texture3D(int wi, int he, int de);
+	int GetTextureCoordinate(int x, int y, int z);
+	void GenCheckerboardTex3D();
+	void GenRandomNoise();
+	void GenRandomNoiseColor();
 };

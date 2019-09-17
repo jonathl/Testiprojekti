@@ -78,7 +78,7 @@ public:
 	Object3D();
 	Vertex* AddVertex(float x, float y, float z);
 	Vertex* AddVertex(glm::vec3 position);
-	void Scale(glm::vec3* newScale);
+	void Scale(glm::vec3 newScale);
 	void AddScale(glm::vec3 newScale);
 	void DecScale(glm::vec3 newScale);
 	void Rotate(float x, float y, float z);
@@ -87,5 +87,6 @@ public:
 	void SetTexture(Texture* tex);
 	void BuildBoundingBox();
 	void FindCenter();
+	void UVWtoLoc();
 };
 

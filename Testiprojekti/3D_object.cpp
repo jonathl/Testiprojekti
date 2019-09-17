@@ -15,8 +15,10 @@ Vertex* Object3D::AddVertex(glm::vec3 position) {
 	++verticesSize;
 	return ver;
 }
-void Object3D::Scale(glm::vec3* newScale) {
-	scaleFactor = newScale;
+void Object3D::Scale(glm::vec3 newScale) {
+	scaleFactor->x = newScale.x;
+	scaleFactor->y = newScale.y;
+	scaleFactor->z = newScale.z;
 }
 void Object3D::AddScale(glm::vec3 newScale) {
 	scaleFactor->x += newScale.x;
@@ -119,5 +121,18 @@ void Object3D::BuildBoundingBox() { //min and max values to vec3
 	bbtris.push_back(new Triangle(*bbverts[5], *bbverts[6], *bbverts[7]));
 }
 void Object3D::FindCenter() {
+	glm::vec3 center(0, 0, 0);
+	for (int i = 0; i < verticesSize; ++i) {
+		center += verts[i]->pos;
+	}
+	center /= verticesSize;
+	*pivotPoint = center;
+}
 
+void Object3D::UVWtoLoc()
+{
+	for (int i = 0; i < verticesSize; ++i) {
+		Vertex* v = verts[i];
+		v->uvw = v->pos;
+	}
 }

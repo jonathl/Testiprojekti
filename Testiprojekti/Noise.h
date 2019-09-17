@@ -30,7 +30,7 @@ private:
 	UVector* unitv; //vectors in grid
 
 public:
-
+	//PerlinNoise() {};
 	PerlinNoise(int wi, int he, int g);
 	UVector GenRandomUnitVector();
 	void OctavePerlin(float* texture);

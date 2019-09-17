@@ -1,5 +1,7 @@
 #include "Texture.h"
 
+
+#pragma region texture
 Texture::Texture(int wi, int he) {
 	width = wi;
 	height = he;
@@ -242,8 +244,14 @@ void Texture::DrawLine(int x0, int y0, int x1, int y1) {
 	}
 }
 
-void Texture::DrawLine(glm::vec3 c0, glm::vec3 c1) {
-	DrawLine(c0.x, c0.y, c1.x, c1.y);
+void Texture::DrawLine(glm::vec3 c0, glm::vec3 c1, bool texcoord) {
+	if (!texcoord) {
+		c0.x *= width;
+		c1.x *= width;
+		c0.y *= height;
+		c1.y *= height;
+	}
+	DrawLine(int(c0.x), int(c0.y), int(c1.x), int(c1.y));
 }
 
 void Texture::DrawFractal(FractalLine f) {
@@ -322,12 +330,14 @@ void Texture::GenRandomNoiseColor() {
 
 void Texture::GenPerlinNoise()
 {
-	//PerlinNoise p(width, height, 6);
-	//p.GenPerlinNoise(pic, 3);
+	PerlinNoise p(width, height, 4);
+	p.GenPerlinNoise(pic, 2);
 }
 
 void Texture::GenWorleyNoise()
 {
+	WorleyNoise wn(width, height, 8, 5);
+	wn.GenWorleyNoise(pic, 4);
 }
 
 
@@ -410,3 +420,82 @@ void Texture::SaveAsPNG(char* file_name, float* buffer, char* title) {
 	if (row != NULL) free(row);
 }
 
+#pragma endregion
+
+//texture3D
+
+Texture3D::Texture3D(int wi, int he, int de) {
+	width = wi;
+	height = he;
+	depth = de;
+	texelCount = wi * he * de;
+	pic = new float[texelCount * 4];
+}
+
+int Texture3D::GetTextureCoordinate(int x, int y, int z) {
+	int textcoord = width * (height - y) - x;
+	//std::cout << "texcoord = " << textcoord << "\n";
+	return textcoord * 4;
+}
+
+void Texture3D::GenCheckerboardTex3D()
+{
+	int state = 1;
+	int others = 1;
+	int index = -1;
+	for (int i = 0; i < height; ++i) {
+		for (int j = 0; j < width; ++j) {
+			if (state == others) {
+				pic[++index] = 1.0f;
+				pic[++index] = 1.0f;
+				pic[++index] = 1.0f;
+				pic[++index] = 1.0f;
+
+			}
+			else {
+				pic[++index] = 0.0f;
+				pic[++index] = 0.0f;
+				pic[++index] = 0.0f;
+				pic[++index] = 1.0;
+			}
+			state *= -1;
+		}
+		others *= -1;
+	}
+}
+
+
+void Texture3D::GenRandomNoise() {
+	int index = -1;
+	float r_value;
+	for (int i = 0; i < depth; ++i) {
+		for (int j = 0; j < height; ++j) {
+			for (int k = 0; k < width; ++k) {
+				r_value = float(rand() % 100) / 100;
+				pic[++index] = r_value;
+				pic[++index] = r_value;
+				pic[++index] = r_value;
+				pic[++index] = r_value;
+			}
+		}
+	}
+}
+
+void Texture3D::GenRandomNoiseColor() {
+	int index = -1;
+	float r_value;
+	for (int i = 0; i < depth; ++i) {
+		for (int j = 0; j < height; ++j) {
+			for (int k = 0; k < width; ++k) {
+				r_value = float(rand() % 100) / 100;
+				pic[++index] = r_value;
+				r_value = float(rand() % 100) / 100;
+				pic[++index] = r_value;
+				r_value = float(rand() % 100) / 100;
+				pic[++index] = r_value;
+				r_value = float(rand() % 100) / 100;
+				pic[++index] = r_value;
+			}
+		}
+	}
+}

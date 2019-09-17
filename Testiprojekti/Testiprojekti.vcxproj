@@ -128,7 +128,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="FragmentShader.fragmentshader" />
+    <None Include="FragmentShaderTex3D.fragmentshader" />
     <None Include="VertexShader.vertexshader" />
+    <None Include="VertexShaderTex3D.vertexshader" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="3D_object.h" />

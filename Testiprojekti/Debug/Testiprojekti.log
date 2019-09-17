@@ -1,72 +1,20 @@
-﻿  Texture.cpp
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(76,20): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(77,21): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(88,20): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(89,21): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(102,20): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(103,21): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(125,20): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(126,21): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(140,20): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(141,21): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(173,10): warning C4244:  'initializing': conversion from 'int' to 'float', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(173,18): warning C4244:  'initializing': conversion from 'int' to 'float', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(183,40): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(183,37): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(201,40): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(201,37): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(218,47): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(218,42): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(235,47): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(235,42): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(246,31): warning C4244:  'argument': conversion from 'T' to 'int', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(246,31): warning C4244:         with
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(246,31): warning C4244:         [
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(246,31): warning C4244:             T=float
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(246,31): warning C4244:         ]
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(246,25): warning C4244:  'argument': conversion from 'T' to 'int', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(246,25): warning C4244:         with
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(246,25): warning C4244:         [
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(246,25): warning C4244:             T=float
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(246,25): warning C4244:         ]
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(246,19): warning C4244:  'argument': conversion from 'T' to 'int', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(246,19): warning C4244:         with
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(246,19): warning C4244:         [
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(246,19): warning C4244:             T=float
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(246,19): warning C4244:         ]
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(246,13): warning C4244:  'argument': conversion from 'T' to 'int', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(246,13): warning C4244:         with
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(246,13): warning C4244:         [
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(246,13): warning C4244:             T=float
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(246,13): warning C4244:         ]
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(261,20): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(284,36): warning C4244:  'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(284,90): warning C4244:  'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(286,20): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(288,33): warning C4244:  'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(296,20): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(297,21): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(310,20): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(311,21): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(393,16): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(394,17): warning C4018:  '<': signed/unsigned mismatch
-Debug\Noise.obj : warning LNK4042: object specified more than once; extras ignored
-LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
-LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
-glew32s.lib(glew.obj) : warning LNK4099: PDB 'vc120.pdb' was not found with 'glew32s.lib(glew.obj)' or at 'C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Debug\vc120.pdb'; linking object as if no debug info
-glfw3.lib(context.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3.lib(context.obj)' or at 'C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Debug\glfw.pdb'; linking object as if no debug info
-glfw3.lib(init.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3.lib(init.obj)' or at 'C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Debug\glfw.pdb'; linking object as if no debug info
-glfw3.lib(input.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3.lib(input.obj)' or at 'C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Debug\glfw.pdb'; linking object as if no debug info
-glfw3.lib(monitor.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3.lib(monitor.obj)' or at 'C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Debug\glfw.pdb'; linking object as if no debug info
-glfw3.lib(vulkan.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3.lib(vulkan.obj)' or at 'C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Debug\glfw.pdb'; linking object as if no debug info
-glfw3.lib(window.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3.lib(window.obj)' or at 'C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Debug\glfw.pdb'; linking object as if no debug info
-glfw3.lib(win32_init.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3.lib(win32_init.obj)' or at 'C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Debug\glfw.pdb'; linking object as if no debug info
-glfw3.lib(win32_joystick.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3.lib(win32_joystick.obj)' or at 'C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Debug\glfw.pdb'; linking object as if no debug info
-glfw3.lib(win32_monitor.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3.lib(win32_monitor.obj)' or at 'C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Debug\glfw.pdb'; linking object as if no debug info
-glfw3.lib(win32_time.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3.lib(win32_time.obj)' or at 'C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Debug\glfw.pdb'; linking object as if no debug info
-glfw3.lib(win32_thread.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3.lib(win32_thread.obj)' or at 'C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Debug\glfw.pdb'; linking object as if no debug info
-glfw3.lib(win32_window.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3.lib(win32_window.obj)' or at 'C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Debug\glfw.pdb'; linking object as if no debug info
-glfw3.lib(wgl_context.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3.lib(wgl_context.obj)' or at 'C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Debug\glfw.pdb'; linking object as if no debug info
-glfw3.lib(egl_context.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3.lib(egl_context.obj)' or at 'C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Debug\glfw.pdb'; linking object as if no debug info
-glfw3.lib(osmesa_context.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3.lib(osmesa_context.obj)' or at 'C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Debug\glfw.pdb'; linking object as if no debug info
+﻿  Main.cpp
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(463,20): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(551,21): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(560,21): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(570,21): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(580,21): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(655,21): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(666,20): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(688,78): warning C4244:  '+=': conversion from 'double' to 'T', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(688,78): warning C4244:         with
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(688,78): warning C4244:         [
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(688,78): warning C4244:             T=float
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(688,78): warning C4244:         ]
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(689,78): warning C4244:  '+=': conversion from 'double' to 'T', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(689,78): warning C4244:         with
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(689,78): warning C4244:         [
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(689,78): warning C4244:             T=float
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(689,78): warning C4244:         ]
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(800,12): warning C4244:  'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
   Testiprojekti.vcxproj -> C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Debug\Testiprojekti.exe

@@ -132,6 +132,7 @@ void PerlinNoise::GenPerlinNoise(float* texture, int octave) {
 			texture[++index] = r_value;
 			texture[++index] = r_value;
 			texture[++index] = r_value;
+			texture[++index] = 1;
 		}
 	}
 }
@@ -215,6 +216,7 @@ void WorleyNoise::GenWorleyNoise(float* texture, int octave) {
 			texture[++index] = r_value;
 			texture[++index] = r_value;
 			texture[++index] = r_value;
+			texture[++index] = 1;
 		}
 	}
 }
