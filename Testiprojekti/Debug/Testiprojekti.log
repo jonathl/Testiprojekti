@@ -1,20 +1,41 @@
-﻿  Main.cpp
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(463,20): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(551,21): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(560,21): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(570,21): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(580,21): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(655,21): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(666,20): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(688,78): warning C4244:  '+=': conversion from 'double' to 'T', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(688,78): warning C4244:         with
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(688,78): warning C4244:         [
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(688,78): warning C4244:             T=float
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(688,78): warning C4244:         ]
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(689,78): warning C4244:  '+=': conversion from 'double' to 'T', possible loss of data
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(689,78): warning C4244:         with
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(689,78): warning C4244:         [
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(689,78): warning C4244:             T=float
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(689,78): warning C4244:         ]
-C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Main.cpp(800,12): warning C4244:  'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+﻿  Texture.cpp
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(78,20): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(79,21): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(90,20): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(91,21): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(104,20): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(105,21): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(127,20): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(128,21): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(142,20): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(143,21): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(175,10): warning C4244:  'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(175,18): warning C4244:  'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(185,40): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(185,37): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(203,40): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(203,37): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(220,47): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(220,42): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(237,47): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(237,42): warning C4244:  'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(269,20): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(292,36): warning C4244:  'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(292,90): warning C4244:  'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(294,20): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(296,33): warning C4244:  'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(304,20): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(305,21): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(318,20): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(319,21): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(404,16): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(405,17): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(448,20): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(449,21): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(473,20): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(474,21): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(475,22): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(489,20): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(490,21): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Testiprojekti\Texture.cpp(491,22): warning C4018:  '<': signed/unsigned mismatch
   Testiprojekti.vcxproj -> C:\Users\Jonathan\Desktop\Things\Projects\Testiprojekti\Debug\Testiprojekti.exe

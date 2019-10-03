@@ -46,7 +46,7 @@ public:
 	void GenRandomNoiseColor();
 	void GenPerlinNoise();
 	void GenWorleyNoise();
-	void SaveAsPNG(char* file_name, float* buffer, char* title);
+	void SaveAsPNG(char* file_name, char* title);
 };
 
 class Texture3D {
@@ -62,4 +62,6 @@ public:
 	void GenCheckerboardTex3D();
 	void GenRandomNoise();
 	void GenRandomNoiseColor();
+	void GenPerlinNoise();
+	void GenWorleyNoise();
 };

@@ -11,9 +11,7 @@
 struct UVector
 {
 	glm::vec3 uvec;
-	int posx;
-	int posy;
-	int posz = 0;
+	//glm::ivec3 pos;
 };
 
 struct vectorGrid 
@@ -21,21 +19,32 @@ struct vectorGrid
 	UVector* v[4];
 };
 
+struct vectorGrid3D
+{
+	UVector* v[8];
+};
+
 class PerlinNoise {
 private:
 	int width;
 	int height;
-	int gridsize; //size in pixels of grid
-	int grids; //grids x grids = grid
+	int depth;
+	//int gridsize; //size in pixels of grid
+	glm::ivec3 gridDimensions = glm::ivec3(1, 1, 1);
+	glm::ivec3 gridPixelDimensions = glm::ivec3(1, 1, 1);
+	//int grids; //grids x grids = grid
 	UVector* unitv; //vectors in grid
 
 public:
 	//PerlinNoise() {};
-	PerlinNoise(int wi, int he, int g);
+	PerlinNoise(unsigned int wi, unsigned int he, unsigned int de = 0, unsigned int gx = 1, unsigned int gy = 0, unsigned int gz = 1);
+	//PerlinNoise(int wi, int he, int g);
+	//PerlinNoise(int wi, int he, int de, int g);
 	UVector GenRandomUnitVector();
-	void OctavePerlin(float* texture);
+	UVector GenRandomUnitVector3D();
 	void GenPerlinNoise1D(const int width, float* texture);
-	void GenPerlinNoise(float* texture, int octave);
+	void GenPerlinNoise(float* texture);
+	void GenPerlinNoise3D(float* texture);
 };
 
 class WorleyNoise {

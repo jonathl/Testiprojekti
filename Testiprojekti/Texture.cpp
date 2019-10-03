@@ -330,8 +330,8 @@ void Texture::GenRandomNoiseColor() {
 
 void Texture::GenPerlinNoise()
 {
-	PerlinNoise p(width, height, 4);
-	p.GenPerlinNoise(pic, 2);
+	PerlinNoise p(width, height, 0, 6);
+	p.GenPerlinNoise(pic);
 }
 
 void Texture::GenWorleyNoise()
@@ -345,7 +345,8 @@ void Texture::GenWorleyNoise()
 //	//std::cout << row <<"\n";
 //}
 
-void Texture::SaveAsPNG(char* file_name, float* buffer, char* title) {
+void Texture::SaveAsPNG(char* file_name, char* title) {
+	float* buffer = pic;
 	png_structp png_ptr = NULL;
 	png_infop info_ptr = NULL;
 	png_bytep row = NULL;
@@ -381,7 +382,7 @@ void Texture::SaveAsPNG(char* file_name, float* buffer, char* title) {
 
 	// Write header (8 bit colour depth)
 	png_set_IHDR(png_ptr, info_ptr, width, height,
-		8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
+		8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE,
 		PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
 	// Set title
@@ -395,17 +396,18 @@ void Texture::SaveAsPNG(char* file_name, float* buffer, char* title) {
 	png_write_info(png_ptr, info_ptr);
 
 
-	// Allocate memory for one row (3 bytes per pixel - RGB)
-	row = (png_bytep)malloc(3 * width * sizeof(png_byte));
+	// Allocate memory for one row (4 bytes per pixel - RGBA)
+	row = (png_bytep)malloc(4 * width * sizeof(png_byte));
 
 	// Write image data
 	int x, y;
 	for (y = 0; y < height; ++y) {
 		for (x = 0; x < width; ++x) {
 			int i = x * 3;
-			row[i] = png_byte(int(buffer[y * width * 3 + i] * 255));
-			row[i + 1] = png_byte(int(buffer[y * width * 3 + i + 1] * 255));
-			row[i + 2] = png_byte(int(buffer[y * width * 3 + i + 2] * 255));
+			row[i] = png_byte(int(buffer[y * width * 4 + i] * 255));
+			row[i + 1] = png_byte(int(buffer[y * width * 4 + i + 1] * 255));
+			row[i + 2] = png_byte(int(buffer[y * width * 4 + i + 2] * 255));
+			row[i + 3] = png_byte(int(buffer[y * width * 4 + i + 3] * 255));
 		}
 		png_write_row(png_ptr, row);
 		//rows[y] = row;
@@ -498,4 +500,10 @@ void Texture3D::GenRandomNoiseColor() {
 			}
 		}
 	}
+}
+
+void Texture3D::GenPerlinNoise()
+{
+	PerlinNoise p(width, height, depth, 3, 12, 4);
+	p.GenPerlinNoise3D(pic);
 }

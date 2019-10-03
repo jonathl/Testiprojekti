@@ -72,6 +72,8 @@ public:
 	GLuint LightColorID;
 	GLuint LightDirectionID;
 	GLuint ITMatrixID;
+	GLuint LayerID;
+	float layer = 0;
 
 	GLuint SpecularAmountID;
 	GLuint SpecularColorID;
@@ -156,6 +158,7 @@ public:
 		LightColorID = glGetUniformLocation(programID, "LightColor");
 		LightDirectionID = glGetUniformLocation(programID, "LightDirection");
 		ITMatrixID = glGetUniformLocation(programID, "IT");
+		LayerID = glGetUniformLocation(programID, "Layer");
 
 		SpecularAmountID = glGetUniformLocation(programID, "SpecularAmount");
 		SpecularColorID = glGetUniformLocation(programID, "SpecularColor");
@@ -470,14 +473,17 @@ public:
 			glUniformMatrix3fv(ITMatrixID, 1, GL_FALSE, &invTranspose[0][0]);
 
 			//glBindTexture(GL_TEXTURE_2D, tex[i]); //texturit voi varmaan asettaa eri järjestykses
-			glBindTexture(GL_TEXTURE_2D, tex[i]); //texturit voi varmaan asettaa eri järjestykses
+			glBindTexture(GL_TEXTURE_3D, tex[i]); //texturit voi varmaan asettaa eri järjestykses
 
 			glBindVertexArray(VAO[i]);
 
 			glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
 		}
 
-
+		layer += 0.001;
+		if (layer > 1)
+			layer = 0;
+		glUniform1f(LayerID, layer);
 
 		glUniform1f(AmbientAmountID, ambientAmount);
 		glUniform3f(AmbientColorID, ambientColor.x, ambientColor.y, ambientColor.z);
@@ -509,7 +515,7 @@ public:
 		setMVP();
 	}
 
-	void closeWindow() {
+	void CloseWindow() {
 
 	}
 };
@@ -579,7 +585,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_8 && action == GLFW_REPEAT) {
 		for (int i = 0; i < windows.size(); ++i) {
 			if (windows[i]->window == window) {
-				windows[i]->obj3D.back()->AddRotate(5, 5, 0);
+				windows[i]->obj3D.back()->AddRotate(0, 0, 2);
 				windows[i]->SetModelMatrix(0);
 				break;
 			}
@@ -806,7 +812,7 @@ int main()
 	currentWindow = window;
 	//Object3D* o = m_genPlane(5, 5);
 	Object3D* o = m_genCube();
-	o->Scale(glm::vec3(0.5, 0.5, 0.5));
+	o->Scale(glm::vec3(0.85, 0.85, 0.85));
 	*o->positionFactor = vec3(0,0,0);
 	o->BuildBoundingBox();
 	o->UVWtoLoc();
@@ -833,11 +839,18 @@ int main()
 	//m_drawFractal(f, pic, wi, he);
 	//m_drawLine(f.c0.x, f.c0.y, f.c1.x, f.c1.y, pic, wi, he);
 	//m_saveAsPNG("kuvaggg.png", wi, he, pic, "k");
-	Texture3D tex = Texture3D(wi, he, he);
-	tex.GenRandomNoiseColor();
-	//tex.GenPerlinNoise();
+
+	//Texture3D tex = Texture3D(wi, he, he);
+	Texture3D texx = Texture3D(wi, he, 70);
+	texx.GenPerlinNoise();
+	Texture tex1 = Texture(wi, he);
+	//tex.GenRandomNoise();
+	texx.GenPerlinNoise();
+	//texx.GenRandomNoiseColor();
+	//tex1.SaveAsPNG("kuvaggg.png", "k");
 	//tex.DrawLine(glm::vec3(0,0,0), glm::vec3(1,1,0));
-	currentWindow->setTexture3D(*o, tex);
+	//currentWindow->setTexture3D(*o, tex);
+	currentWindow->setTexture3D(*o, texx);
 
 	do {
 		currentWindow->mainLoop(); // windows[i]->mainloop();

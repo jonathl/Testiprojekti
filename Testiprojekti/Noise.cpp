@@ -2,26 +2,66 @@
 
 //PerlinNoise
 
-PerlinNoise::PerlinNoise(int wi, int he, int g) {
+PerlinNoise::PerlinNoise(unsigned int wi, unsigned int he, unsigned int de, unsigned int gx, unsigned int gy, unsigned int gz) {
 	width = wi;
 	height = he;
-	grids = pow(2, g);
-	gridsize = wi / grids + 1;
-	int vectorsize = (grids + 1) * (grids + 1);
-	int t = 0;
-	unitv = new UVector[vectorsize];
-	for (int i = 0; i < vectorsize; ++i) {  //generate unit vectors
-		unitv[i] = GenRandomUnitVector();
-		unitv[i].posx = width / grids * t;
-		unitv[i].posy = height / grids * (i / (grids + 1));
-		++t;
-		if (t > grids)
-			t = 0;
+	depth = de;
+	if (gy == 0) {
+		gridDimensions = glm::ivec3(gx);
 	}
+	else {
+		gridDimensions = glm::ivec3(gx, gy, gz);
+	}
+	if (de == 0)
+	{
+		gridPixelDimensions = glm::ivec3(wi / gridDimensions.x + 1, he / gridDimensions.y + 1, 0); // + 1 is to avoid parts with no noise caused by rounding errors (?)
+		int vectorsize = (gridDimensions.x + 1) * (gridDimensions.y + 1);
+		unitv = new UVector[vectorsize];
+		for (int i = 0; i < vectorsize; ++i) {  //generate unit vectors
+			unitv[i] = GenRandomUnitVector();
+		}
+	}
+	else {
+		gridPixelDimensions = glm::ivec3(wi / gridDimensions.x + 1, he / gridDimensions.y + 1, de / gridDimensions.z + 1);
+		int vectorsize = (gridDimensions.x + 1) * (gridDimensions.y + 1) * (gridDimensions.z + 1);
+		unitv = new UVector[vectorsize];
+		for (int i = 0; i < vectorsize; ++i) {  //generate unit vectors
+			unitv[i] = GenRandomUnitVector3D();
+		}
+	}
+	
 }
+
+//PerlinNoise::PerlinNoise(int wi, int he, int g) {
+//	width = wi;
+//	height = he;
+//	depth = 0;
+//	gridDimensions = glm::ivec3(g); // pow(2, g); //muuta? 
+//	gridPixelDimensions = glm::ivec3(wi / gridDimensions.x + 1, he / gridDimensions.y +1, 0); // + 1 is to avoid parts with no noise caused by rounding errors (?)
+//	int vectorsize = (gridDimensions.x + 1) * (gridDimensions.y + 1); // vertices
+//	unitv = new UVector[vectorsize];
+//	for (int i = 0; i < vectorsize; ++i) {  //generate unit vectors
+//		unitv[i] = GenRandomUnitVector();
+//	}
+//}
+//
+//PerlinNoise::PerlinNoise(int wi, int he, int de, int g)
+//{
+//	width = wi;
+//	height = he;
+//	depth = de;
+//	gridDimensions = glm::ivec3(g); // pow(2, g); //muuta? 
+//	gridPixelDimensions = glm::ivec3(wi / gridDimensions.x + 1, he / gridDimensions.y +1, de / gridDimensions.z +1);
+//	int vectorsize = (gridDimensions.x + 1) * (gridDimensions.y + 1) * (gridDimensions.z + 1); 
+//	unitv = new UVector[vectorsize];
+//	for (int i = 0; i < vectorsize; ++i) {  //generate unit vectors
+//		unitv[i] = GenRandomUnitVector3D();
+//	}
+//}
 
 UVector PerlinNoise::GenRandomUnitVector() {
 	int angle = rand() % 359;
+	int angle2 = rand() % 359;
 	UVector u;
 	u.uvec.x = cos(float(angle));
 	u.uvec.y = sin(float(angle));
@@ -29,100 +69,81 @@ UVector PerlinNoise::GenRandomUnitVector() {
 	return u;
 }
 
-void PerlinNoise::OctavePerlin(float* texture) {
-	float* pic = new float[width * height];
-	float* pictemp = new float[width * height];
-	GenPerlinNoise(pic, 1);
-	int octave = 2;
-	int index;
-	while (octave <= grids) {
-		index = -1;
-		GenPerlinNoise(pictemp, octave);
-		for (int i = 0; i < height; ++i) {
-			for (int j = 0; j < width; ++j) {
-				pic[++index] = pic[index] + 0.5f * (pictemp[index] - pic[index]);
-			}
-		}
-		octave *= 2;
-	}
-	index = -1;
-	int index1 = -1;
-	float r_value;
-	for (int i = 0; i < height; ++i) {
-		for (int j = 0; j < width; ++j) {
-			r_value = pic[++index1];
-			texture[++index] = r_value;
-			texture[++index] = r_value;
-			texture[++index] = r_value;
-		}
-	}
+UVector PerlinNoise::GenRandomUnitVector3D() {
+	int angle = rand() % 359;
+	int angle2 = rand() % 359;
+	int angle3 = rand() % 359;
+	UVector u;
+	u.uvec.x = cos(float(angle));
+	u.uvec.y = sin(float(angle));
+	u.uvec.z = 0;
+	glm::mat4 mRotate = glm::rotate(glm::mat4(1.0f), glm::radians(float(angle3)), glm::vec3(0, 1, 0));
+	glm::vec4 v = glm::vec4(u.uvec, 1) * mRotate;
+	u.uvec = glm::vec3(v.x, v.y, v.z);
+	//lisää z
+	return u;
 }
 
 void PerlinNoise::GenPerlinNoise1D(const int width, float* texture) {
 
 }
 
-void PerlinNoise::GenPerlinNoise(float* texture, int octave) {
-	octave = pow(2, octave);
-	if (octave > grids) {
-		std::cout << "we have a problem\n";
-		return;
-	}
-	if ((gridsize * grids) - width > gridsize) {
-		std::cout << "picture too small for that octave\n";
-		return;
-	}
-	vectorGrid* vg = new vectorGrid[grids * grids]; //generate vector grid
+void PerlinNoise::GenPerlinNoise(float* texture) {
+	//generate vector grid
+	vectorGrid* vg = new vectorGrid[gridDimensions.x * gridDimensions.y]; 
 	int index = 0;
-	int go = grids / octave;
-	int go0 = (grids + 1) * (go);
+	int gridY = (gridDimensions.x + 1); // 
 	int rowfirst = 0;
-	for (int i = 0; i < (grids + 1) * (grids);) {
+	for (int i = 0; index < gridDimensions.x * gridDimensions.y;) {
 		vg[index].v[0] = &unitv[i];
-		vg[index].v[1] = &unitv[i + go];
-		vg[index].v[2] = &unitv[i + go0];
-		vg[index].v[3] = &unitv[i + go0 + go];
+		vg[index].v[1] = &unitv[i + 1];
+		vg[index].v[2] = &unitv[i + gridY];
+		vg[index].v[3] = &unitv[i + gridY + 1];
 		++index;
-		if (index % octave == 0) {
-			i = rowfirst + go0;
+		if (index % gridDimensions.x == 0) {
+			i = rowfirst + gridY;
 			rowfirst = i;
 		}
 		else {
-			i += go;
+			++i;
 		}
 	}
+	//get pixel color
 	index = -1;
 	int gi = -1; //gridindex
 	float r_value = 1.0f;
 	for (int i = 0; i < height; ++i) {
-		if (i % (gridsize * (grids / octave)) == 0) {
-			gi += octave;
+		if (i % (gridPixelDimensions.y) == 0) { //if moving to higher (y-coord) grid
+			gi += gridDimensions.x;
 		}
-		gi -= octave - 1;
+		gi -= gridDimensions.x - 1; //set to first grid on x axis;
 		for (int j = 0; j < width; ++j) {
-			if (j != 0 && j % (gridsize * (grids / octave)) == 0) {
-				++gi;
+			if (j != 0 && j % (gridPixelDimensions.x) == 0) {
+				++gi; //next on x axis
 			}
-			float dx[4];
-			float dy[4];
+			//distance of the point from the corners
+			glm::vec3 d[4];
+			float relativeDistanceX = float(j % (gridPixelDimensions.x)) / (gridPixelDimensions.x);
+			float relativeDistanceY = float(i % (gridPixelDimensions.y)) / (gridPixelDimensions.y);
 			for (int k = 0; k < 4; ++k) {
-				dx[k] = float(j % (gridsize * go)) / (gridsize * go);
-				dy[k] = float(i % (gridsize * go)) / (gridsize * go);
+				d[k].x = relativeDistanceX;
+				d[k].y = relativeDistanceY;
 				if (k == 1 || k == 3) {
-					dx[k] = dx[k] - 1;
+					d[k].x -= 1;
 				}
 				if (k > 1) {
-					dy[k] = dy[k] - 1;
+					d[k].y -= 1;
 				}
 			}
-			float d0 = vg[gi].v[0]->uvec.x * dx[0] + vg[gi].v[0]->uvec.y * dy[0];
-			float d1 = vg[gi].v[1]->uvec.x * dx[1] + vg[gi].v[1]->uvec.y * dy[1];
-			float d2 = vg[gi].v[2]->uvec.x * dx[2] + vg[gi].v[2]->uvec.y * dy[2];
-			float d3 = vg[gi].v[3]->uvec.x * dx[3] + vg[gi].v[3]->uvec.y * dy[3];
 
-			float t = float(j % (gridsize * (grids / octave))) / (gridsize * (grids / octave));
+			float d0 = vg[gi].v[0]->uvec.x * d[0].x + vg[gi].v[0]->uvec.y * d[0].y;
+			float d1 = vg[gi].v[1]->uvec.x * d[1].x + vg[gi].v[1]->uvec.y * d[1].y;
+			float d2 = vg[gi].v[2]->uvec.x * d[2].x + vg[gi].v[2]->uvec.y * d[2].y;
+			float d3 = vg[gi].v[3]->uvec.x * d[3].x + vg[gi].v[3]->uvec.y * d[3].y;
+
+			float t = relativeDistanceX;
 			float jl = t * t * t * (t * (t * 6 - 15) + 10);
-			t = float(i % (gridsize * (grids / octave))) / (gridsize * (grids / octave));
+			t = relativeDistanceY;
 			float jl0 = t * t * t * (t * (t * 6 - 15) + 10);
 
 			float di0 = d0 + jl * (d1 - d0);
@@ -135,6 +156,135 @@ void PerlinNoise::GenPerlinNoise(float* texture, int octave) {
 			texture[++index] = 1;
 		}
 	}
+}
+
+void PerlinNoise::GenPerlinNoise3D(float* texture)
+{
+	//build vector grid
+	int vgsize = gridDimensions.x * gridDimensions.y * gridDimensions.z;
+	vectorGrid3D* vg = new vectorGrid3D[vgsize];
+	int index = 0;
+	int gridY = (gridDimensions.x + 1); //vertices
+	int gridZ = (gridDimensions.x + 1) * (gridDimensions.y + 1);
+	int rowfirst = 0;
+	int layerfirst = 0;
+	int rowindex = 0;
+	for (int i = 0; index < vgsize;) {
+		vg[index].v[0] = &unitv[i];
+		vg[index].v[1] = &unitv[i + 1];
+		vg[index].v[2] = &unitv[i + gridY];
+		vg[index].v[3] = &unitv[i + gridY + 1];
+		vg[index].v[4] = &unitv[i + gridZ];
+		vg[index].v[5] = &unitv[i + 1 + gridZ];
+		vg[index].v[6] = &unitv[i + gridY + gridZ];
+		vg[index].v[7] = &unitv[i + gridY + 1 + gridZ];
+		//make it loop
+		if (index >= vgsize - gridDimensions.x * gridDimensions.y) {
+			vg[index].v[4] = vg[index- (vgsize - gridDimensions.x * gridDimensions.y)].v[0];
+			vg[index].v[5] = vg[index- (vgsize - gridDimensions.x * gridDimensions.y)].v[1];
+			vg[index].v[6] = vg[index- (vgsize - gridDimensions.x * gridDimensions.y)].v[2];
+			vg[index].v[7] = vg[index- (vgsize - gridDimensions.x * gridDimensions.y)].v[3];
+		}
+
+		++index;
+		if (index % gridDimensions.x == 0) { // next row
+			++rowindex;
+			if (rowindex % gridDimensions.y == 0) { //next layer
+				i = layerfirst + gridZ;
+				layerfirst = i;
+				rowfirst = i;
+			}
+			else {
+				i = rowfirst + gridY;
+				rowfirst = i;
+			}
+		}
+		else {
+			++i;
+		}
+	}
+	//get pixel color
+	index = -1;
+	int gi = 0; //gridindex
+	float r_value = 1.0f;
+	for (int h = 0; h < depth; ++h) {
+		if (h % (gridPixelDimensions.z) == 0 && h != 0) { //if moving to deeper (z-coord) grid
+			++gi;
+		}
+		else if(h != 0) {
+			gi -= gridDimensions.x * gridDimensions.y - 1; //set to first grid on x and y axis;
+		}
+		for (int i = 0; i < height; ++i) {
+			if (i % (gridPixelDimensions.y) == 0 && i != 0) { //if moving to higher (y-coord) grid
+				++gi;
+			}
+			else if(i != 0){
+				gi -= gridDimensions.x - 1; //set to first grid on x axis;
+			}
+			for (int j = 0; j < width; ++j) {
+				if (j != 0 && j % (gridPixelDimensions.x) == 0) {
+					++gi; //next on x axis
+				}
+
+				//distance of the point from the corners
+				glm::vec3 d[8];
+				float relativeDistanceX = float(j % (gridPixelDimensions.x)) / (gridPixelDimensions.x);
+				float relativeDistanceY = float(i % (gridPixelDimensions.y)) / (gridPixelDimensions.y);
+				float relativeDistanceZ = float(h % (gridPixelDimensions.z)) / (gridPixelDimensions.z);
+				int k = 0;
+				for (int z = 0; z < 2; ++z) {
+					for (int y = 0; y < 2; ++y) {
+						for (int x = 0; x < 2; ++x) {
+							d[k].x = relativeDistanceX;
+							d[k].y = relativeDistanceY;
+							d[k].z = relativeDistanceZ;
+							if (x == 1) {
+								d[k].x -= 1;
+							}
+							if (y == 1) {
+								d[k].y -= 1;
+							}
+							if (z == 1) {
+								d[k].z -= 1;
+							}
+							++k;
+						}
+					}
+				}
+
+				float d0 = vg[gi].v[0]->uvec.x * d[0].x + vg[gi].v[0]->uvec.y * d[0].y + vg[gi].v[0]->uvec.z * d[0].z;
+				float d1 = vg[gi].v[1]->uvec.x * d[1].x + vg[gi].v[1]->uvec.y * d[1].y + vg[gi].v[1]->uvec.z * d[1].z;
+				float d2 = vg[gi].v[2]->uvec.x * d[2].x + vg[gi].v[2]->uvec.y * d[2].y + vg[gi].v[2]->uvec.z * d[2].z;
+				float d3 = vg[gi].v[3]->uvec.x * d[3].x + vg[gi].v[3]->uvec.y * d[3].y + vg[gi].v[3]->uvec.z * d[3].z;
+				float d4 = vg[gi].v[4]->uvec.x * d[4].x + vg[gi].v[4]->uvec.y * d[4].y + vg[gi].v[4]->uvec.z * d[4].z;
+				float d5 = vg[gi].v[5]->uvec.x * d[5].x + vg[gi].v[5]->uvec.y * d[5].y + vg[gi].v[5]->uvec.z * d[5].z;
+				float d6 = vg[gi].v[6]->uvec.x * d[6].x + vg[gi].v[6]->uvec.y * d[6].y + vg[gi].v[6]->uvec.z * d[6].z;
+				float d7 = vg[gi].v[7]->uvec.x * d[7].x + vg[gi].v[7]->uvec.y * d[7].y + vg[gi].v[7]->uvec.z * d[7].z;
+
+				float t = relativeDistanceX;
+				float jl = t * t * t * (t * (t * 6 - 15) + 10);
+				t = relativeDistanceY;
+				float jl0 = t * t * t * (t * (t * 6 - 15) + 10);
+				t = relativeDistanceZ;
+				float jl1 = t * t * t * (t * (t * 6 - 15) + 10);
+
+				float di0 = d0 + jl * (d1 - d0);
+				float di1 = d2 + jl * (d3 - d2);
+				float di2 = d4 + jl * (d5 - d4);
+				float di3 = d6 + jl * (d7 - d6);
+				float r0 = di0 + jl0 * (di1 - di0);
+				float r1 = di2 + jl0 * (di3 - di2);
+				r_value = r0 + jl1 * (r1 - r0);
+				r_value = (r_value + 1) / 2;
+				//float decol = gi * (1.0f / vgsize);
+				texture[++index] = r_value;
+				texture[++index] = r_value;
+				texture[++index] = r_value;
+				texture[++index] = 1;
+			}
+		}
+	}
+	delete[](vg);
 }
 
 //WorleyNoise

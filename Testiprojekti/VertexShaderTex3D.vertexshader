@@ -6,6 +6,7 @@ layout(location = 2) in vec3 texcoord;
 
 out vec3 Texcoord;
 out vec3 fragmentColor;
+out float layer;
 
 uniform mat4 MM;
 uniform mat4 VM;
@@ -20,6 +21,8 @@ uniform vec3 WorldSpaceCameraDir;
 uniform float Shininess;
 uniform vec3 SpecularColor;
 uniform float SpecularAmount;
+
+uniform float Layer;
 
 void main()
 {
@@ -40,6 +43,7 @@ void main()
 		s * SpecularColor * SpecularAmount;
 
 	fragmentColor = vec3(0.5, 0.2, 0.1) * light;
-	Texcoord = texcoord;
+	Texcoord = vec3(texcoord.x, texcoord.y, Layer);
+	layer = Layer;
 }
 
