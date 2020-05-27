@@ -6,10 +6,11 @@ in vec3 fragmentColor;
 out vec4 outColor;
 
 uniform sampler2D tex;
+uniform vec3 AmbientColor;
 
 void main()
 {
-    //outColor = vec4(fragmentColor,1);
+    //outColor = vec4(AmbientColor,1);//fragmentColor,1);
 	
 	outColor = texture(tex, Texcoord);
 	//if (outColor.r < 0.3f){

@@ -87,6 +87,6 @@ public:
 	void SetTexture(Texture* tex);
 	void BuildBoundingBox();
 	void FindCenter();
-	void UVWtoLoc();
+	void UVWfromLoc();
 };
 

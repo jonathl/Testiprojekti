@@ -26,6 +26,8 @@
 #include <png.h>
 #include <zlib.h>
 
+#include <dwmapi.h>
+
 using namespace glm;
 
 void window_focus_callback(GLFWwindow* window, int focused);
@@ -148,7 +150,7 @@ public:
 		return window;
 	}
 	void setProgram() {
-		programID = LoadShaders("VertexShaderTex3D.vertexshader", "FragmentShaderTex3D.fragmentshader");
+		programID = LoadShaders("VertexShader.vertexshader", "FragmentShader.fragmentshader"); //TODO 
 		MMMatrixID = glGetUniformLocation(programID, "MM");
 		VMMatrixID = glGetUniformLocation(programID, "VM");
 		PVMatrixID = glGetUniformLocation(programID, "PV");
@@ -206,16 +208,16 @@ public:
 		glGenVertexArrays(1, &mVAO);
 		glGenBuffers(1, &VNO);
 		glGenBuffers(1, &VBO);
-		glGenBuffers(1, &EBO);
 		glGenBuffers(1, &VTC);
+		glGenBuffers(1, &EBO);
 
 		glBindVertexArray(mVAO);
 
-		glBindBuffer(GL_ARRAY_BUFFER, VNO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * size * 3, normals, GL_STATIC_DRAW);
-
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * size * 3, vertices, GL_STATIC_DRAW);
+
+		glBindBuffer(GL_ARRAY_BUFFER, VNO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * size * 3, normals, GL_STATIC_DRAW);
 
 		glBindBuffer(GL_ARRAY_BUFFER, VTC); //texcoord
 		if(!tex3D)
@@ -235,7 +237,7 @@ public:
 		if (!tex3D)
 			glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 		else
-			glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+			glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(2);
 		// normal attribute
 		glBindBuffer(GL_ARRAY_BUFFER, VNO);
@@ -251,7 +253,7 @@ public:
 	}
 
 	void setMVP() {
-		Projection = glm::perspective(glm::radians(45.0f), 4.0f / 4.0f, 0.1f, 100.0f);
+		Projection = glm::perspective(glm::radians(45.0f), ((float)windowPixelSizeX / (float)windowPixelSizeY), 0.1f, 105.0f); //4 -> windowpixelsize
 
 		worldSpaceCameraPos.x = 0.5f;
 		worldSpaceCameraPos.y = 0.5f;
@@ -274,10 +276,11 @@ public:
 
 		SetModelMatrix();
 	}
+
 	void setLighting() {
 		ambientColor.r = 1.0f;
-		ambientColor.g = 1.0f;
-		ambientColor.b = 1.0f;
+		ambientColor.g = 0.0f;
+		ambientColor.b = 0.50f;
 
 		lightDirection.x = 0.0f;
 		lightDirection.y = 0.0f;
@@ -291,6 +294,7 @@ public:
 		specularColor.y = 1.0f;
 		specularColor.z = 1.0f;
 	}
+
 	/*void setTexture(Object3D o, int wi, int he, float* pic) {
 		o.SetTexture(wi, he, pic);
 		GLuint t;
@@ -305,6 +309,11 @@ public:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, o.textureWidth, o.textureHeight, 0, GL_RGB, GL_FLOAT, o.texture);
 		tex.push_back(t);
 	}*/
+
+	void updateTexture(Texture texture) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture.width, texture.height, 0, GL_RGBA, GL_FLOAT, texture.pic);
+	}
+
 	void setTexture(Object3D o, Texture texture) {
 		//o.SetTexture();
 		GLuint t; 
@@ -319,6 +328,7 @@ public:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture.width, texture.height, 0, GL_RGBA, GL_FLOAT, texture.pic);
 		tex.push_back(t);
 	}
+
 	void setTexture3D(Object3D o, Texture3D texture) {
 		//o.SetTexture();
 		GLuint t;
@@ -330,10 +340,12 @@ public:
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE); //?
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		//glGenerateMipmap(GL_TEXTURE_2D);
 
 		glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, texture.width, texture.height, texture.depth, 0, GL_RGBA, GL_FLOAT, texture.pic);
 		tex.push_back(t);
 	}
+
 	GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path) {
 
 		// Create the shaders
@@ -436,7 +448,7 @@ public:
 		glm::mat4 mScale = glm::scale(Model, glm::vec3(obj.scaleFactor->x, obj.scaleFactor->y, obj.scaleFactor->z));
 		glm::mat4 mTranslateScalePivot = glm::translate(Model, glm::vec3(-obj.pivotPoint->x * (obj.scaleFactor->x-1), -obj.pivotPoint->y * (obj.scaleFactor->y-1), -obj.pivotPoint->z * (obj.scaleFactor->z-1)));
 
-		Model = Model * mTranslate * mTranslateRotatePivot * mRotate * mTranslateScalePivot * mScale;
+		Model =mTranslate * mTranslateRotatePivot * mRotate * mTranslateScalePivot * mScale;
 		Models.push_back(Model);
 	}
 
@@ -472,15 +484,16 @@ public:
 			invTranspose = glm::transpose(glm::inverse(glm::mat3(Models[i])));
 			glUniformMatrix3fv(ITMatrixID, 1, GL_FALSE, &invTranspose[0][0]);
 
-			//glBindTexture(GL_TEXTURE_2D, tex[i]); //texturit voi varmaan asettaa eri järjestykses
-			glBindTexture(GL_TEXTURE_3D, tex[i]); //texturit voi varmaan asettaa eri järjestykses
+			glBindTexture(GL_TEXTURE_2D, tex[i]); //texturit voi varmaan asettaa eri järjestykses //TODO tekstuurit on ihan väärin mut ei sillä niin mitään
+			//glBindTexture(GL_TEXTURE_3D, tex[i]); //texturit voi varmaan asettaa eri järjestykses
 
 			glBindVertexArray(VAO[i]);
 
 			glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
+			//glDrawArrays(GL_TRIANGLES, 0, obj3D[i]->verticesSize *3);
 		}
 
-		layer += 0.001;
+		//layer += 0.001;
 		if (layer > 1)
 			layer = 0;
 		glUniform1f(LayerID, layer);
@@ -585,7 +598,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_8 && action == GLFW_REPEAT) {
 		for (int i = 0; i < windows.size(); ++i) {
 			if (windows[i]->window == window) {
-				windows[i]->obj3D.back()->AddRotate(0, 0, 2);
+				windows[i]->obj3D.back()->AddRotate(0, 2, 2);
 				windows[i]->SetModelMatrix(0);
 				break;
 			}
@@ -803,6 +816,7 @@ void m_newWindow() {
 
 int main()
 {
+	//srand(900);
 	srand(time(NULL));
 	My_window* window = new My_window("window1");
 	//My_window* w2 = new My_window("window2");
@@ -812,45 +826,57 @@ int main()
 	currentWindow = window;
 	//Object3D* o = m_genPlane(5, 5);
 	Object3D* o = m_genCube();
-	o->Scale(glm::vec3(0.85, 0.85, 0.85));
+	o->Scale(glm::vec3(1, 1, 1)); //0.85
 	*o->positionFactor = vec3(0,0,0);
 	o->BuildBoundingBox();
-	o->UVWtoLoc();
+	o->UVWfromLoc();
 	o->FindCenter();
 	currentWindow->AddObject3D(o, true);
 	//currentWindow->AddObject3D(m_genPlane(5, 5));
 
-	const int wi = 100, he = 100;
+	const int wi = 500, he = 500;
 	//clock_t begin = clock();
 	//clock_t end = clock();
 	//std::cout << double(end - begin) / CLOCKS_PER_SEC << "\n";
 
-	//FractalLine f(200, 200, 500, 200);
-	//f.addLine(500, 500);
-	//f.addLine(200, 500);
+	FractalLine f(150, 150, 350, 150);
+	f.AddLine(350, 350);
+	f.AddLine(150, 350);
+	f.CloseLines();
 	//int2 coor[] = { int2(200,500) };
 	//f.addLines(coor, 1);
-	//f.closeLines();
-	//for (int r = 0; r < 3; ++r) {
-	//	//std::cout << "\nITERATE START!\n\n";
-	//	f.iterFractal();
-	//}
+	for (int r = 0; r < 5; ++r) {
+		//std::cout << "\nITERATE START!\n\n";
+		f.IterFractal();
+	}
 	////f.printPoints();
-	//m_drawFractal(f, pic, wi, he);
 	//m_drawLine(f.c0.x, f.c0.y, f.c1.x, f.c1.y, pic, wi, he);
 	//m_saveAsPNG("kuvaggg.png", wi, he, pic, "k");
 
 	//Texture3D tex = Texture3D(wi, he, he);
-	Texture3D texx = Texture3D(wi, he, 70);
-	texx.GenPerlinNoise();
+	//Texture3D texx = Texture3D(wi, he, 70);
 	Texture tex1 = Texture(wi, he);
-	//tex.GenRandomNoise();
-	texx.GenPerlinNoise();
-	//texx.GenRandomNoiseColor();
-	//tex1.SaveAsPNG("kuvaggg.png", "k");
+	Texture tex2 = Texture(wi, he);
+	//tex2.DrawLine(vec3(0.1, 0.1, 0), vec3(0.1, 0.7, 0), false);
+	//tex1.GenCheckerboardTex();
+	
+	tex1.DrawFractal(f);
+
+	tex1.GenOneColorTex(0.7,0.87,0.9);
+	//tex1.DrawGridOnTex(wi / 3 +1, 0.9, 0.4, 0.5);
+
+	//tex1.SaveAsPNG("worley.png", "k");
+	tex2.GenPerlinNoise();
+	tex2.SaveAsPNG("perlinContrastBef.png", "k");
+	//tex1.GenWorleyNoise();
+	tex2.AddContrast(1, 0);
+	//tex1.CombinePictures(tex2, &tex1, 0.5);
+	//tex1.GenRandomNoise();
+	tex2.SaveAsPNG("perlinContrastAft.png", "k");
+	tex1.SaveAsPNG("combine.png", "k");
 	//tex.DrawLine(glm::vec3(0,0,0), glm::vec3(1,1,0));
 	//currentWindow->setTexture3D(*o, tex);
-	currentWindow->setTexture3D(*o, texx);
+	currentWindow->setTexture(*o, tex2);
 
 	do {
 		currentWindow->mainLoop(); // windows[i]->mainloop();
@@ -860,10 +886,13 @@ int main()
 		if (currentWindow != NULL) {
 
 			if (cursorLeftPressed) {
-				/*glfwGetCursorPos(currentWindow->window, &cursor_xpos, &cursor_ypos);
-				m_drawToTexture(currentWindow->tex, pic, wi, he);*/
+				glfwGetCursorPos(currentWindow->window, &cursor_xpos, &cursor_ypos);
+				tex1.DrawToTexture(cursor_xpos, cursor_ypos);
+				std::cout << cursor_xpos << " " << cursor_ypos ;
+				window->updateTexture(tex1);
 			}
 			if (cursorRightPressed) {
+				tex1.SaveAsPNG("piirto.png", "k");
 				/*glfwGetCursorPos(currentWindow->window, &cursor_xpos, &cursor_ypos);
 				m_bucketToolTexture2(currentWindow->tex, pic, wi, he);*/
 			}

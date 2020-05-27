@@ -129,7 +129,7 @@ void Object3D::FindCenter() {
 	*pivotPoint = center;
 }
 
-void Object3D::UVWtoLoc()
+void Object3D::UVWfromLoc()
 {
 	for (int i = 0; i < verticesSize; ++i) {
 		Vertex* v = verts[i];

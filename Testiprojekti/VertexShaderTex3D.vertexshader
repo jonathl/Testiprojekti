@@ -43,7 +43,11 @@ void main()
 		s * SpecularColor * SpecularAmount;
 
 	fragmentColor = vec3(0.5, 0.2, 0.1) * light;
-	Texcoord = vec3(texcoord.x, texcoord.y, Layer);
+	float m = texcoord.z + Layer;
+	if (texcoord.z + Layer > 1){
+		m = texcoord.z + Layer -1;
+	}
+	Texcoord = vec3(texcoord.x, texcoord.y, m);
 	layer = Layer;
 }
 

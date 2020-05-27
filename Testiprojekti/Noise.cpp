@@ -125,6 +125,7 @@ void PerlinNoise::GenPerlinNoise(float* texture) {
 			glm::vec3 d[4];
 			float relativeDistanceX = float(j % (gridPixelDimensions.x)) / (gridPixelDimensions.x);
 			float relativeDistanceY = float(i % (gridPixelDimensions.y)) / (gridPixelDimensions.y);
+			//calculate vector from corner to location in grid
 			for (int k = 0; k < 4; ++k) {
 				d[k].x = relativeDistanceX;
 				d[k].y = relativeDistanceY;
@@ -136,6 +137,7 @@ void PerlinNoise::GenPerlinNoise(float* texture) {
 				}
 			}
 
+			//dot products
 			float d0 = vg[gi].v[0]->uvec.x * d[0].x + vg[gi].v[0]->uvec.y * d[0].y;
 			float d1 = vg[gi].v[1]->uvec.x * d[1].x + vg[gi].v[1]->uvec.y * d[1].y;
 			float d2 = vg[gi].v[2]->uvec.x * d[2].x + vg[gi].v[2]->uvec.y * d[2].y;
@@ -434,7 +436,7 @@ void FractalLine::IterFractal() {
 	else {
 		glm::vec3 nl0[3][6] = {
 			{glm::vec3(0,0,0), glm::vec3(0.5f,-0.3f,0), glm::vec3(0.6f,-0.1f,0), glm::vec3(0.75f,-0.25f,0), glm::vec3(0.75f,0,0), glm::vec3(1,0,0)},
-			{glm::vec3(0,0,0), glm::vec3(0.5f,0,0), glm::vec3(0.5f,-0.25f,0), glm::vec3(0.75f,-0.25f,0), glm::vec3(0.75f,0,0), glm::vec3(1,0,0) },
+			{glm::vec3(0,0,0), glm::vec3(0.4f,0,0), glm::vec3(0.4f,-0.25f,0), glm::vec3(0.75f,-0.25f,0), glm::vec3(0.75f,0,0), glm::vec3(1,0,0) },
 			{glm::vec3(0,0,0), glm::vec3(0.25f,0.0f,0), glm::vec3(0.3f,-0.1f,0), glm::vec3(0.5f,-0.25f,0), glm::vec3(0.75f,0,0), glm::vec3(1,0,0) }
 		};
 		int r = rand() % 3;

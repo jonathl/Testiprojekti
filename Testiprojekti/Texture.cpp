@@ -242,6 +242,8 @@ void Texture::DrawLine(int x0, int y0, int x1, int y1) {
 			++i;
 		}
 	}
+
+
 }
 
 void Texture::DrawLine(glm::vec3 c0, glm::vec3 c1, bool texcoord) {
@@ -256,7 +258,7 @@ void Texture::DrawLine(glm::vec3 c0, glm::vec3 c1, bool texcoord) {
 
 void Texture::DrawFractal(FractalLine f) {
 	if (f.fl.empty()) {
-		DrawLine(f.c0, f.c1);
+		DrawLine(f.c0, f.c1, true);
 	}
 	else {
 		for each (FractalLine * fra in f.fl) {
@@ -265,19 +267,11 @@ void Texture::DrawFractal(FractalLine f) {
 	}
 }
 
-void Texture::CombinePictures(Texture texture, Texture* rtex, float str) {
+void Texture::CombinePictures(Texture texture, Texture* uusiTex, float str) {
 	for (int i = 0; i < texelCount * 4; ++i)
 	{
-		rtex->pic[i] = pic[i] + str * (texture.pic[i] - pic[i]);
+		uusiTex->pic[i] = pic[i] + str * (texture.pic[i] - pic[i]);
 	}
-	/*int index = -1;
-	for (int i = 0; i < height; ++i) {
-		for (int j = 0; j < width; ++j) {
-			texture[++index] = pic1[++index] + str * (pic2[++index] - pic1[++index]);
-			texture[++index] = pic1[++index] + str * (pic2[++index] - pic1[++index]);
-			texture[++index] = pic1[++index] + str * (pic2[++index] - pic1[++index]);
-		}
-	}*/
 }
 
 float Texture::ChangeScale(float oldmin, float oldmax, float newmin, float newmax, float value) {
@@ -336,7 +330,7 @@ void Texture::GenPerlinNoise()
 
 void Texture::GenWorleyNoise()
 {
-	WorleyNoise wn(width, height, 8, 5);
+	WorleyNoise wn(width, height, 3, 5);
 	wn.GenWorleyNoise(pic, 4);
 }
 
@@ -403,7 +397,7 @@ void Texture::SaveAsPNG(char* file_name, char* title) {
 	int x, y;
 	for (y = 0; y < height; ++y) {
 		for (x = 0; x < width; ++x) {
-			int i = x * 3;
+			int i = x * 4;
 			row[i] = png_byte(int(buffer[y * width * 4 + i] * 255));
 			row[i + 1] = png_byte(int(buffer[y * width * 4 + i + 1] * 255));
 			row[i + 2] = png_byte(int(buffer[y * width * 4 + i + 2] * 255));
